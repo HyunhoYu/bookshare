@@ -1,5 +1,6 @@
 package my.domain.user.service.auth;
 
+import my.common.exception.UserInsertFailException;
 import my.domain.user.UserVO;
 import my.domain.user.dto.request.LoginRequestDto;
 

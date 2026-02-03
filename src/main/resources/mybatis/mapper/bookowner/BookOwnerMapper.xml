@@ -3,20 +3,56 @@
 
 <mapper namespace="my.domain.bookowner.BookOwnerMapper">
 
-    <!-- ResultMap -->
+
+
+    <sql id="bookOwnerJoin">
+        FROM USERS u
+        JOIN BOOK_OWNER b ON u.ID = b.ID
+        LEFT JOIN BANK_ACCOUNT ba ON b.ID = ba.BOOK_OWNER_ID
+        WHERE u.DELETED_AT IS NULL
+    </sql>
+
+    <sql id="bookOwnerColumn">
+        u.ID, u.NAME, u.EMAIL, u.PHONE, u.ROLE,
+        ba.BANK_NAME, ba.ACCOUNT_NUMBER
+    </sql>
+
     <resultMap id="bookOwnerResultMap" type="my.domain.bookowner.vo.BookOwnerVO">
+        <!-- UserVO 상속 필드 -->
         <id property="id" column="ID"/>
+        <result property="role" column="ROLE"/>
+        <result property="name" column="NAME"/>
+        <result property="phone" column="PHONE"/>
+        <result property="email" column="EMAIL"/>
+        <result property="residentNumber" column="RESIDENT_NUMBER"/>
+        <result property="password" column="PASSWORD"/>
+
+        <!-- BankAccountVO (association) -->
+        <association property="bankAccountVO" javaType="my.domain.bankaccount.vo.BankAccountVO">
+            <result property="bankName" column="BANK_NAME"/>
+            <result property="accountNumber" column="ACCOUNT_NUMBER"/>
+        </association>
     </resultMap>
 
-    <!-- Insert -->
+    <sql id="selectAllQuery">
+        SELECT <include refid="bookOwnerColumn"></include>
+        <include refid="bookOwnerJoin"></include>
+    </sql>
+
+    <select id="selectAll" resultMap="bookOwnerResultMap">
+        <include refid="selectAllQuery">
+        </include>
+    </select>
+
+    <select id="selectOne" parameterType="long" resultMap="bookOwnerResultMap">
+        <include refid="selectAll"></include>
+        WHERE ID=#{id}
+    </select>
+
     <insert id="insert" parameterType="my.domain.bookowner.vo.BookOwnerVO">
         INSERT INTO BOOK_OWNER (ID)
         VALUES (#{id})
     </insert>
 
-    <!-- Select -->
-    <select id="selectById" parameterType="long" resultMap="bookOwnerResultMap">
-        SELECT * FROM BOOK_OWNER WHERE ID = #{id}
-    </select>
 
 </mapper>

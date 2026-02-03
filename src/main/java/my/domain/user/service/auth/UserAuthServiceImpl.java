@@ -2,6 +2,8 @@ package my.domain.user.service.auth;
 
 import lombok.RequiredArgsConstructor;
 import my.common.exception.ErrorCode;
+import my.common.exception.InCorrectPasswordException;
+import my.common.exception.UserInsertFailException;
 import my.common.exception.UserNotFoundException;
 import my.domain.user.UserMapper;
 import my.domain.user.UserVO;
@@ -24,7 +26,13 @@ public class UserAuthServiceImpl implements UserAuthService {
 
     @Override
     public int save(UserVO userVO) {
-        return userMapper.insert(userVO);
+        int result = userMapper.insert(userVO);
+
+        if (result != 1) {
+            throw new UserInsertFailException(ErrorCode.USER_INSERT_FAIL);
+        }
+
+        return result;
     }
 
 
@@ -41,7 +49,7 @@ public class UserAuthServiceImpl implements UserAuthService {
         String inputPassword = loginRequestDto.getPassword();
 
         if (!passwordEncoder.matches(inputPassword, storedPassword)) {
-            throw new RuntimeException("비밀번호가 일치하지 않습니다");
+            throw new InCorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
         }
 
         return user;
@@ -57,7 +65,7 @@ public class UserAuthServiceImpl implements UserAuthService {
     public UserVO createUser(UserVO userVO) {
 
         setUserId(userVO);
-        int result = save(userVO);
+
 
 
         return userVO;

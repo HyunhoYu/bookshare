@@ -1,6 +1,8 @@
 package my.domain.bookowner.service.auth;
 
 import lombok.RequiredArgsConstructor;
+import my.common.exception.DuplicateEmailException;
+import my.common.exception.ErrorCode;
 import my.domain.bankaccount.service.auth.BankAccountAuthService;
 import my.domain.bankaccount.vo.BankAccountVO;
 import my.domain.bookowner.BookOwnerMapper;
@@ -30,6 +32,11 @@ public class BookOwnerAuthServiceImpl implements BookOwnerAuthService {
     @Override
     @Transactional
     public BookOwnerVO signup(BookOwnerJoinRequestDto dto) {
+
+        if (userAuthService.findByEmail(dto.getEmail()) != null) {
+            throw new DuplicateEmailException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
         UserVO userVO = UserVO.builder()
                 .role(Role.BOOK_OWNER)
                 .name(dto.getName())

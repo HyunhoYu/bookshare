@@ -1,21 +1,50 @@
 package my.common.exception;
 
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import my.common.response.ApiResponse;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-
-    @ExceptionHandler(UserNotFoundException.class)
-    public ApiResponse<?> handleUserNotFound(UserNotFoundException e) {
+    // 모든 커스텀 예외 처리 (ApplicationException 상속한 예외들)
+    @ExceptionHandler(ApplicationException.class)
+    public ResponseEntity<ApiResponse<?>> handleApplicationException(ApplicationException e) {
         ErrorCode errorCode = e.getErrorCode();
-        return ApiResponse.error(errorCode.getStatus(), errorCode.getMessage());
+        log.warn("ApplicationException: {}", errorCode.getMessage());
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ApiResponse.error(errorCode.getStatus(), errorCode.getMessage()));
     }
 
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<?>> handleValidationException(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(error -> error.getDefaultMessage())
+                .orElse("입력값이 올바르지 않습니다.");
+
+        log.warn("Validation failed: {}", message);
+
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.badRequest(message));
+    }
+
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<?>> handleException(Exception e) {
+        log.error("Unexpected error: ", e);
+
+        return ResponseEntity
+                .internalServerError()
+                .body(ApiResponse.serverError("서버 오류가 발생했습니다."));
+    }
 }

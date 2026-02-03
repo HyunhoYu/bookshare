@@ -15,7 +15,7 @@ public class BookVO {
     private String publisherHouse;
     private int price;
     private Date enteredAt;
-    private String isSaled;
+    private String isSold;
     private String typeCode;
     private String state;
 

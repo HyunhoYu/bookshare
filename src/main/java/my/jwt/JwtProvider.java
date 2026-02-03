@@ -70,14 +70,11 @@ public class JwtProvider {
 
 
     private Claims parseClaims(String token) {
-
-        JwtParser jwtParse = Jwts.parser()
+        return Jwts.parser()
                 .verifyWith(key)
-                .build();
-
-        Jws<Claims> claims = jwtParse.parseSignedClaims(token);
-
-        return claims.getPayload();
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
 

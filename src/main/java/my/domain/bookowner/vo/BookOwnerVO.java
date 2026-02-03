@@ -10,9 +10,5 @@ import my.utils.annotation.Ref;
 @Setter
 public class BookOwnerVO extends UserVO {
 
-    private Long id;
-    @Ref(reference = UserVO.class)
-    private UserVO userVO;
     private BankAccountVO bankAccountVO;
-
 }

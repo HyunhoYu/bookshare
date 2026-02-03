@@ -10,7 +10,7 @@
         <result property="publisherHouse" column="PUBLISHER_HOUSE"/>
         <result property="price" column="PRICE"/>
         <result property="enteredAt" column="ENTERED_AT"/>
-        <result property="isSaled" column="IS_SALED"/>
+        <result property="isSold" column="IS_SALED"/>
         <result property="typeCode" column="BOOK_TYPE"/>
         <result property="state" column="STATE"/>
     </resultMap>

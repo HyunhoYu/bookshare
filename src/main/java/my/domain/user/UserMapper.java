@@ -14,5 +14,6 @@ public interface UserMapper {
     UserVO selectByEmail(String email);
     List<UserVO> selectAll();
     int updateOne(UserUpdateDto dto);
+    int softDeleteOne(Long id);
 
 }

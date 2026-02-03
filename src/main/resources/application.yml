@@ -6,9 +6,9 @@ spring:
     name: bookshare
 
   datasource:
-    url: {DB_URL}
-    username: {DB_USERNAME}
-    password: {DB_PASSWORD}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
 
   jackson:
@@ -27,5 +27,5 @@ logging:
     org.springframework.web: DEBUG
 
 jwt:
-  secret: {JWT_SECRET}
+  secret: ${JWT_SECRET}
   expiration: 3600000

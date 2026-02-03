@@ -29,7 +29,7 @@ public class AuthApiController {
         return ApiResponse.success(new JwtTokenResponseDto(token));
     }
 
-    @PostMapping("/book-owner/register")
+    @PostMapping("/book-owner")
     public ApiResponse<JwtTokenResponseDto> registerBookOwner(@RequestBody BookOwnerJoinRequestDto dto) {
         BookOwnerVO bookOwner = bookOwnerAuthService.signup(dto);
 
