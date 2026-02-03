@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.bookowner.BookOwnerMapper">
+
+    <!-- ResultMap -->
+    <resultMap id="bookOwnerResultMap" type="my.domain.bookowner.vo.BookOwnerVO">
+        <id property="id" column="ID"/>
+    </resultMap>
+
+    <!-- Insert -->
+    <insert id="insert" parameterType="my.domain.bookowner.vo.BookOwnerVO">
+        INSERT INTO BOOK_OWNER (ID)
+        VALUES (#{id})
+    </insert>
+
+    <!-- Select -->
+    <select id="selectById" parameterType="long" resultMap="bookOwnerResultMap">
+        SELECT * FROM BOOK_OWNER WHERE ID = #{id}
+    </select>
+
+</mapper>

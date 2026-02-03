@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: bookshare
+
+  datasource:
+    url: {DB_URL}
+    username: {DB_USERNAME}
+    password: {DB_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  jackson:
+    default-property-inclusion: non_null
+
+mybatis:
+  mapper-locations: classpath:mybatis/mapper/**/*.xml
+  type-aliases-package: my.domain
+  configuration:
+    map-underscore-to-camel-case: true
+    jdbc-type-for-null: NULL
+
+logging:
+  level:
+    my: DEBUG
+    org.springframework.web: DEBUG
+
+jwt:
+  secret: {JWT_SECRET}
+  expiration: 3600000

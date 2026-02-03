@@ -1,0 +1,51 @@
+# Build output
+target/
+
+# Project docs (local only)
+*브리핑*.html
+*체크리스트*.md
+*명세서*.html
+erd.pdf
+pom.xml
+
+# IDE - IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# IDE - Eclipse
+.classpath
+.project
+.settings/
+
+# IDE - VS Code
+.vscode/
+
+# Environment & Secrets
+.env
+.env.*
+application-local.yml
+application-secret.yml
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# Misc
+*.swp
+*.bak
+*.tmp
+*~

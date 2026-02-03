@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.bankaccount.BankAccountMapper">
+
+    <resultMap id="bankAccountResultMap" type="my.domain.bankaccount.vo.BankAccountVO">
+        <id property="id" column="BOOK_OWNER_ID"/>
+        <result property="accountNumber" column="ACCOUNT_NUMBER"/>
+        <result property="bankName" column="BANK_NAME"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="my.domain.bankaccount.vo.BankAccountVO">
+        INSERT INTO BANK_ACCOUNT (BOOK_OWNER_ID, ACCOUNT_NUMBER, BANK_NAME)
+        VALUES (#{id}, #{accountNumber}, #{bankName})
+    </insert>
+
+    <select id="selectById" parameterType="long" resultMap="bankAccountResultMap">
+        SELECT * FROM BANK_ACCOUNT WHERE BOOK_OWNER_ID = #{id}
+    </select>
+
+</mapper>
