@@ -16,4 +16,16 @@ public class BookServiceImpl implements BookService {
     public List<BookVO> findAll() {
         return bookMapper.selectAll();
     }
+
+    @Override
+    public List<BookVO> findBooksByBookOwnerId(Long id) {
+        return bookMapper.selectBooksByBookOwnerId(id);
+    }
+
+    @Override
+    public List<BookVO> findSoldBookOfBookOwner(Long bookOwnerId) {
+        return bookMapper.selectSoldBookByBookOwnerId(bookOwnerId);
+    }
+
+
 }

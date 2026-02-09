@@ -45,8 +45,17 @@
     </select>
 
     <select id="selectOne" parameterType="long" resultMap="bookOwnerResultMap">
-        <include refid="selectAll"></include>
-        WHERE ID=#{id}
+        <include refid="selectAllQuery"></include>
+        AND u.ID=#{id}
+    </select>
+
+    <select id="selectById" parameterType="long" resultMap="bookOwnerResultMap">
+        SELECT u.ID, u.ROLE, u.NAME, u.PHONE, u.EMAIL, u.RESIDENT_NUMBER, u.PASSWORD,
+               ba.BANK_NAME, ba.ACCOUNT_NUMBER
+        FROM USERS u
+        JOIN BOOK_OWNER b ON u.ID = b.ID
+        LEFT JOIN BANK_ACCOUNT ba ON b.ID = ba.BOOK_OWNER_ID
+        WHERE u.ID = #{id} AND u.DELETED_AT IS NULL
     </select>
 
     <insert id="insert" parameterType="my.domain.bookowner.vo.BookOwnerVO">

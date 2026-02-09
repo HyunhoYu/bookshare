@@ -2,7 +2,7 @@ package my.api.auth;
 
 import lombok.RequiredArgsConstructor;
 import my.common.response.ApiResponse;
-import my.domain.bookowner.dto.BookOwnerJoinRequestDto;
+import my.domain.bookowner.dto.request.BookOwnerJoinRequestDto;
 import my.domain.bookowner.service.auth.BookOwnerAuthService;
 import my.domain.bookowner.vo.BookOwnerVO;
 import my.domain.user.UserVO;

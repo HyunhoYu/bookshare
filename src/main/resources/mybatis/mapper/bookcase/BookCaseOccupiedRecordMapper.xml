@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.bookcase.BookCaseOccupiedRecordMapper">
+
+    <resultMap id="occupiedRecordResultMap" type="my.domain.bookcase.BookCaseOccupiedRecordVO">
+        <id property="id" column="ID"/>
+        <result property="bookCaseId" column="BOOK_CASE_ID"/>
+        <result property="bookOwnerId" column="BOOK_OWNER_ID"/>
+        <result property="occupiedAt" column="OCCUPIED_AT"/>
+        <result property="unOccupiedAt" column="UN_OCCUPIED_AT"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="my.domain.bookcase.BookCaseOccupiedRecordVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78234".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO BOOK_CASE_OCCUPIED_RECORD (BOOK_CASE_ID, BOOK_OWNER_ID, OCCUPIED_AT)
+        VALUES (#{bookCaseId}, #{bookOwnerId}, SYSTIMESTAMP)
+    </insert>
+
+    <select id="selectById" parameterType="long" resultMap="occupiedRecordResultMap">
+        SELECT * FROM BOOK_CASE_OCCUPIED_RECORD WHERE ID = #{id}
+    </select>
+
+    <!-- 현재 점유 중인 레코드 조회 (un_occupied_at IS NULL) -->
+    <select id="selectCurrentByBookCaseId" parameterType="long" resultMap="occupiedRecordResultMap">
+        SELECT * FROM BOOK_CASE_OCCUPIED_RECORD
+        WHERE BOOK_CASE_ID = #{bookCaseId} AND UN_OCCUPIED_AT IS NULL
+    </select>
+
+    <!-- 특정 book_owner의 점유 이력 -->
+    <select id="selectByBookOwnerId" parameterType="long" resultMap="occupiedRecordResultMap">
+        SELECT * FROM BOOK_CASE_OCCUPIED_RECORD
+        WHERE BOOK_OWNER_ID = #{bookOwnerId}
+        ORDER BY OCCUPIED_AT DESC
+    </select>
+
+    <!-- 점유 해제 (un_occupied_at 설정) -->
+    <update id="updateUnOccupiedAt" parameterType="long">
+        UPDATE BOOK_CASE_OCCUPIED_RECORD
+        SET UN_OCCUPIED_AT = SYSTIMESTAMP
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 해당 책장의 현재 점유 수 (0이면 이용 가능) -->
+    <select id="countCurrentOccupied" parameterType="long" resultType="int">
+        SELECT COUNT(*) FROM BOOK_CASE_OCCUPIED_RECORD
+        WHERE BOOK_CASE_ID = #{bookCaseId} AND UN_OCCUPIED_AT IS NULL
+    </select>
+
+</mapper>

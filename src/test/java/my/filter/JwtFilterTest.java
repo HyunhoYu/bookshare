@@ -140,15 +140,16 @@ class JwtFilterTest {
         }
 
         @Test
-        @DisplayName("Authorization 헤더 없어도 filterChain은 호출된다")
-        void doFilter_NoAuthHeader_CallsFilterChain() throws ServletException, IOException {
+        @DisplayName("Authorization 헤더 없으면 401 응답을 반환하고 filterChain은 호출되지 않는다")
+        void doFilter_NoAuthHeader_Returns401() throws ServletException, IOException {
             // given - Authorization 헤더 없음
 
             // when
             jwtFilter.doFilter(request, response, filterChain);
 
             // then
-            verify(filterChain, times(1)).doFilter(request, response);
+            assertEquals(401, response.getStatus());
+            verify(filterChain, never()).doFilter(request, response);
         }
     }
 
@@ -171,8 +172,8 @@ class JwtFilterTest {
         }
 
         @Test
-        @DisplayName("잘못된 토큰이어도 filterChain은 호출된다")
-        void doFilter_InvalidToken_CallsFilterChain() throws ServletException, IOException {
+        @DisplayName("잘못된 토큰이면 401 응답을 반환하고 filterChain은 호출되지 않는다")
+        void doFilter_InvalidToken_Returns401() throws ServletException, IOException {
             // given
             request.addHeader("Authorization", "Bearer invalid.token.here");
 
@@ -180,7 +181,8 @@ class JwtFilterTest {
             jwtFilter.doFilter(request, response, filterChain);
 
             // then
-            verify(filterChain, times(1)).doFilter(request, response);
+            assertEquals(401, response.getStatus());
+            verify(filterChain, never()).doFilter(request, response);
         }
 
         @Test

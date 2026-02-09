@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.settlement_ratio.SettlementRatioMapper">
+
+    <resultMap id="settlementRatioResultMap" type="my.domain.settlement_ratio.vo.SettlementRatioVO">
+        <id property="id" column="ID"/>
+        <result property="ownerRatio" column="OWNER_RATIO"/>
+        <result property="storeRatio" column="STORE_RATIO"/>
+        <result property="createdAt" column="CREATED_AT"/>
+    </resultMap>
+
+
+    <insert id="insertNewRatio" parameterType="my.domain.settlement_ratio.vo.SettlementRatioVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_77702".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO SETTLEMENT_RATIO (OWNER_RATIO, STORE_RATIO, CREATED_AT)
+        VALUES (#{ownerRatio}, #{storeRatio}, SYSDATE)
+    </insert>
+
+
+
+    <select id="selectCurrentRatio" resultMap="settlementRatioResultMap">
+        SELECT *
+        FROM (
+            SELECT *
+            FROM SETTLEMENT_RATIO
+            ORDER BY ID DESC
+        )
+        WHERE ROWNUM = 1
+    </select>
+
+    <select id="selectAllRatios" resultMap="settlementRatioResultMap">
+
+        SELECT *
+        FROM SETTLEMENT_RATIO
+
+    </select>
+
+
+
+</mapper>

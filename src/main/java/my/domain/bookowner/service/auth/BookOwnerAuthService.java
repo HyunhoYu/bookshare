@@ -1,6 +1,6 @@
 package my.domain.bookowner.service.auth;
 
-import my.domain.bookowner.dto.BookOwnerJoinRequestDto;
+import my.domain.bookowner.dto.request.BookOwnerJoinRequestDto;
 import my.domain.bookowner.vo.BookOwnerVO;
 
 public interface BookOwnerAuthService {

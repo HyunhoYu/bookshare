@@ -10,7 +10,6 @@ public interface UserMapper {
 
     int insert(UserVO userVO);
     UserVO selectById(Long id);
-    Long selectNextId();
     UserVO selectByEmail(String email);
     List<UserVO> selectAll();
     int updateOne(UserUpdateDto dto);

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.bookcase.BookCaseMapper">
+
+    <resultMap id="bookCaseResultMap" type="my.domain.bookcase.BookCaseVO">
+        <id property="id" column="ID"/>
+        <result property="locationCode" column="LOCATION_CODE"/>
+        <result property="bookCaseTypeId" column="BOOK_CASE_TYPE_ID"/>
+    </resultMap>
+
+    <insert id="insertBookCase" parameterType="my.domain.bookcase.BookCaseVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78225".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO BOOK_CASE (LOCATION_CODE, BOOK_CASE_TYPE_ID)
+        VALUES (#{locationCode}, #{bookCaseTypeId})
+    </insert>
+
+    <select id="selectById" parameterType="long" resultMap="bookCaseResultMap">
+        SELECT * FROM BOOK_CASE WHERE ID = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="bookCaseResultMap">
+        SELECT * FROM BOOK_CASE ORDER BY ID
+    </select>
+
+    <select id="selectUsableBookCases" resultMap="bookCaseResultMap">
+        SELECT bc.*
+        FROM BOOK_CASE bc
+        WHERE NOT EXISTS (
+            SELECT 1 FROM BOOK_CASE_OCCUPIED_RECORD bcor
+            WHERE bcor.BOOK_CASE_ID = bc.ID
+            AND bcor.UN_OCCUPIED_AT IS NULL
+        )
+    </select>
+
+
+</mapper>

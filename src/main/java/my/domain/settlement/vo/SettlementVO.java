@@ -1,0 +1,15 @@
+package my.domain.settlement.vo;
+
+import java.sql.Timestamp;
+
+import lombok.Getter;
+import lombok.Setter;
+import my.common.vo.MyApplicationVO;
+
+
+@Getter
+@Setter
+public class SettlementVO extends MyApplicationVO {
+    private Long bookOwnerId;
+    private Timestamp settledAt;
+}

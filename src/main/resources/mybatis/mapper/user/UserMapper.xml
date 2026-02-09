@@ -13,10 +13,6 @@
         <result property="password" column="PASSWORD"/>
     </resultMap>
 
-    <select id = "selectNextId" resultType = "long">
-        SELECT SEQ_USERS.NEXTVAL FROM DUAL
-    </select>
-
     <select id = "selectAll" resultType="UserVO">
         SELECT * FROM USERS
         WHERE DELETED_AT IS NULL
@@ -33,11 +29,11 @@
     </select>
 
     <insert id="insert" parameterType="my.domain.user.UserVO">
-        <selectKey keyProperty="id" resultType="long" order="BEFORE">
-            SELECT SEQ_USERS.NEXTVAL FROM DUAL
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78221".CURRVAL FROM DUAL
         </selectKey>
-        INSERT INTO USERS (ID, ROLE, NAME, PHONE, EMAIL, RESIDENT_NUMBER, PASSWORD)
-        VALUES (#{id}, #{role, jdbcType=VARCHAR}, #{name}, #{phone}, #{email}, #{residentNumber}, #{password})
+        INSERT INTO USERS (ROLE, NAME, PHONE, EMAIL, RESIDENT_NUMBER, PASSWORD)
+        VALUES (#{role, jdbcType=VARCHAR}, #{name}, #{phone}, #{email}, #{residentNumber}, #{password})
     </insert>
 
 

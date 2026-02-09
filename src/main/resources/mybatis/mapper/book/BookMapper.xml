@@ -6,12 +6,13 @@
     <resultMap id="bookResultMap" type="my.domain.book.BookVO">
         <id property="id" column="ID"/>
         <result property="bookOwnerId" column="BOOK_OWNER_ID"/>
+        <result property="bookCaseId" column="BOOK_CASE_ID"/>
         <result property="bookName" column="BOOK_NAME"/>
         <result property="publisherHouse" column="PUBLISHER_HOUSE"/>
         <result property="price" column="PRICE"/>
         <result property="enteredAt" column="ENTERED_AT"/>
-        <result property="isSold" column="IS_SALED"/>
-        <result property="typeCode" column="BOOK_TYPE"/>
+        <result property="groupCodeId" column="GROUP_CODE_ID"/>
+        <result property="commonCodeId" column="COMMON_CODE_ID"/>
         <result property="state" column="STATE"/>
     </resultMap>
 
@@ -23,6 +24,18 @@
         SELECT *
         FROM BOOK
         <include refid="whereInStock"/>
+    </select>
+
+    <select id="selectBooksByBookOwnerId" parameterType="long" resultMap="bookResultMap">
+        SELECT *
+        FROM BOOK
+        WHERE BOOK_OWNER_ID=#{id}
+    </select>
+    
+    <select id="selectSoldBookByBookOwnerId" parameterType="long" resultMap="bookResultMap">
+        SELECT *
+        FROM BOOK
+        WHERE BOOK_OWNER_ID=#{id} AND STATE='SOLD'
     </select>
 
 </mapper>

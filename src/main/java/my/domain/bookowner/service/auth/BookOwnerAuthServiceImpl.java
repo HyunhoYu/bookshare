@@ -6,7 +6,7 @@ import my.common.exception.ErrorCode;
 import my.domain.bankaccount.service.auth.BankAccountAuthService;
 import my.domain.bankaccount.vo.BankAccountVO;
 import my.domain.bookowner.BookOwnerMapper;
-import my.domain.bookowner.dto.BookOwnerJoinRequestDto;
+import my.domain.bookowner.dto.request.BookOwnerJoinRequestDto;
 import my.domain.bookowner.vo.BookOwnerVO;
 import my.domain.user.UserVO;
 import my.domain.user.service.auth.UserAuthService;

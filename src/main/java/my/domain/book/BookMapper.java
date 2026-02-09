@@ -8,4 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 public interface BookMapper {
 
     List<BookVO> selectAll();
+    List<BookVO> selectBooksByBookOwnerId(Long id);
+    List<BookVO> selectSoldBookByBookOwnerId(Long id);
+
 }

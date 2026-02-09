@@ -63,16 +63,8 @@ public class UserAuthServiceImpl implements UserAuthService {
     @Override
     @Transactional
     public UserVO createUser(UserVO userVO) {
-
-        setUserId(userVO);
-
-
-
+        save(userVO);
         return userVO;
-    }
-
-    private void setUserId(UserVO userVO) {
-        userVO.setId(userMapper.selectNextId());
     }
 
 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.booksoldrecord.BookSoldRecordMapper">
+
+    <resultMap id="bookSoldRecordResultMap" type="my.domain.booksoldrecord.vo.BookSoldRecordVO">
+        <id property="id" column="ID"/>
+        <result property="soldAt" column="SOLD_AT"/>
+        <result property="soldPrice" column="SOLD_PRICE"/>
+        <result property="customerId" column="CUSTOMER_ID"/>
+        <result property="groupCodeId" column="GROUP_CODE_ID"/>
+        <result property="commonCodeId" column="COMMON_CODE_ID"/>
+        <result property="bookOwnerSettlementId" column="BOOK_OWNER_SETTLEMENT_ID"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="bookSoldRecordResultMap">
+        SELECT * FROM BOOK_SALE_RECORD
+    </select>
+
+    <select id="selectById" parameterType="long" resultMap="bookSoldRecordResultMap">
+        SELECT * FROM BOOK_SALE_RECORD WHERE ID = #{id}
+    </select>
+
+    <select id="selectByCustomerId" parameterType="long" resultMap="bookSoldRecordResultMap">
+        SELECT * FROM BOOK_SALE_RECORD WHERE CUSTOMER_ID = #{customerId}
+    </select>
+
+    <select id="selectBySettlementId" parameterType="long" resultMap="bookSoldRecordResultMap">
+        SELECT * FROM BOOK_SALE_RECORD WHERE BOOK_OWNER_SETTLEMENT_ID = #{settlementId}
+    </select>
+
+    <insert id="insert" parameterType="my.domain.booksoldrecord.vo.BookSoldRecordVO">
+        INSERT INTO BOOK_SALE_RECORD (ID, SOLD_AT, SOLD_PRICE, CUSTOMER_ID, GROUP_CODE_ID, COMMON_CODE_ID, BOOK_OWNER_SETTLEMENT_ID)
+        VALUES (#{id}, #{soldAt}, #{soldPrice}, #{customerId}, #{groupCodeId}, #{commonCodeId}, #{bookOwnerSettlementId})
+    </insert>
+
+</mapper>

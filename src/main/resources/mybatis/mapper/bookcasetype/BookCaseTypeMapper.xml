@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.bookcasetype.BookCaseTypeMapper">
+
+    <resultMap id="bookCaseTypeResultMap" type="my.domain.bookcasetype.BookCaseTypeVO">
+        <id property="id" column="ID"/>
+        <result property="code" column="CODE"/>
+        <result property="monthlyPrice" column="MONTHLY_PRICE"/>
+        <result property="createdAt" column="CREATED_AT"/>
+    </resultMap>
+
+    <insert id="insertBookCaseType" parameterType="my.domain.bookcasetype.BookCaseTypeVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78216".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO BOOK_CASE_TYPE (CODE, MONTHLY_PRICE)
+        VALUES (#{code}, #{monthlyPrice})
+    </insert>
+
+    <select id="selectById" resultMap="bookCaseTypeResultMap">
+        SELECT * FROM BOOK_CASE_TYPE WHERE ID = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="bookCaseTypeResultMap">
+        SELECT * FROM BOOK_CASE_TYPE ORDER BY ID
+    </select>
+
+</mapper>

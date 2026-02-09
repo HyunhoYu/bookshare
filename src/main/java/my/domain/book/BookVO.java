@@ -11,12 +11,13 @@ import my.enums.BookState;
 public class BookVO {
     private Long id;
     private Long bookOwnerId;
+    private Long bookCaseId;
     private String bookName;
     private String publisherHouse;
     private int price;
     private Date enteredAt;
-    private String isSold;
-    private String typeCode;
+    private String groupCodeId;
+    private String commonCodeId;
     private String state;
 
     public BookVO() {
