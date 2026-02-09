@@ -3,6 +3,7 @@ package my.domain.booksoldrecord;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import my.domain.booksoldrecord.vo.BookSoldRecordVO;
 
@@ -13,5 +14,10 @@ public interface BookSoldRecordMapper {
     BookSoldRecordVO selectById(Long id);
     List<BookSoldRecordVO> selectByCustomerId(Long customerId);
     List<BookSoldRecordVO> selectBySettlementId(Long settlementId);
-    void insert(BookSoldRecordVO bookSoldRecordVO);
+    int insert(BookSoldRecordVO bookSoldRecordVO);
+    List<BookSoldRecordVO> selectUnsettled();
+    List<BookSoldRecordVO> selectUnsettledByBookOwnerId(Long bookOwnerId);
+    int countByIdsAndBookOwnerId(@Param("ids") List<Long> ids, @Param("bookOwnerId") Long bookOwnerId);
+    int countAlreadySettled(@Param("ids") List<Long> ids);
+    int updateSettlementId(@Param("settlementId") Long settlementId, @Param("ids") List<Long> ids);
 }

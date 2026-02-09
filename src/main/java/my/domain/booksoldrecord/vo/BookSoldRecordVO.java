@@ -10,11 +10,11 @@ import my.common.vo.MyApplicationVO;
 @Setter
 public class BookSoldRecordVO extends MyApplicationVO {
 
-    private Long id;
     private Timestamp soldAt;
     private int soldPrice;
     private Long customerId;
-    private String groupCodeId;   // common_code_group.group_code (예: "BUY_TYPE")
     private String commonCodeId;  // common_code.code (예: "01"=신용카드, "02"=현금)
-    private Long bookOwnerSettlementId;
+    private Long bookOwnerSettlementId; //이거는 정산할때 초기화되는 컬럼
+    private Long ratioId;
+
 }

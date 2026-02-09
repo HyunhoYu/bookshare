@@ -8,9 +8,9 @@
         <result property="soldAt" column="SOLD_AT"/>
         <result property="soldPrice" column="SOLD_PRICE"/>
         <result property="customerId" column="CUSTOMER_ID"/>
-        <result property="groupCodeId" column="GROUP_CODE_ID"/>
         <result property="commonCodeId" column="COMMON_CODE_ID"/>
         <result property="bookOwnerSettlementId" column="BOOK_OWNER_SETTLEMENT_ID"/>
+        <result property="ratioId" column="RATIO_ID"/>
     </resultMap>
 
     <select id="selectAll" resultMap="bookSoldRecordResultMap">
@@ -29,9 +29,51 @@
         SELECT * FROM BOOK_SALE_RECORD WHERE BOOK_OWNER_SETTLEMENT_ID = #{settlementId}
     </select>
 
+    <select id="selectUnsettled" resultMap="bookSoldRecordResultMap">
+        SELECT * FROM BOOK_SALE_RECORD WHERE BOOK_OWNER_SETTLEMENT_ID IS NULL
+    </select>
+
+    <select id="selectUnsettledByBookOwnerId" parameterType="long" resultMap="bookSoldRecordResultMap">
+        SELECT BSR.*
+        FROM BOOK_SALE_RECORD BSR
+        JOIN BOOK B ON BSR.ID = B.ID
+        WHERE BSR.BOOK_OWNER_SETTLEMENT_ID IS NULL
+        AND B.BOOK_OWNER_ID = #{bookOwnerId}
+    </select>
+
     <insert id="insert" parameterType="my.domain.booksoldrecord.vo.BookSoldRecordVO">
-        INSERT INTO BOOK_SALE_RECORD (ID, SOLD_AT, SOLD_PRICE, CUSTOMER_ID, GROUP_CODE_ID, COMMON_CODE_ID, BOOK_OWNER_SETTLEMENT_ID)
-        VALUES (#{id}, #{soldAt}, #{soldPrice}, #{customerId}, #{groupCodeId}, #{commonCodeId}, #{bookOwnerSettlementId})
+        INSERT INTO BOOK_SALE_RECORD (ID, SOLD_AT, SOLD_PRICE, CUSTOMER_ID, COMMON_CODE_ID, BOOK_OWNER_SETTLEMENT_ID, RATIO_ID)
+        VALUES (#{id}, SYSTIMESTAMP, #{soldPrice}, #{customerId}, #{commonCodeId}, #{bookOwnerSettlementId, jdbcType=NUMERIC}, #{ratioId})
     </insert>
+
+    <select id="countByIdsAndBookOwnerId" resultType="int">
+        SELECT COUNT(*)
+        FROM BOOK_SALE_RECORD BSR
+        JOIN BOOK B ON BSR.ID = B.ID
+        WHERE BSR.ID IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND B.BOOK_OWNER_ID = #{bookOwnerId}
+    </select>
+
+    <select id="countAlreadySettled" resultType="int">
+        SELECT COUNT(*)
+        FROM BOOK_SALE_RECORD
+        WHERE ID IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND BOOK_OWNER_SETTLEMENT_ID IS NOT NULL
+    </select>
+
+    <update id="updateSettlementId">
+        UPDATE BOOK_SALE_RECORD
+        SET BOOK_OWNER_SETTLEMENT_ID = #{settlementId}
+        WHERE ID IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
 
 </mapper>

@@ -10,5 +10,8 @@ public interface BookMapper {
     List<BookVO> selectAll();
     List<BookVO> selectBooksByBookOwnerId(Long id);
     List<BookVO> selectSoldBookByBookOwnerId(Long id);
+    int insertBook(BookVO bookVO);
+    BookVO selectById(Long id);
+    int updateStateSold(Long id);
 
 }

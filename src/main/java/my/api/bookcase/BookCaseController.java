@@ -4,9 +4,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import my.annotation.RequireRole;
 import my.common.response.ApiResponse;
+import my.domain.book.BookVO;
 import my.domain.bookcase.BookCaseOccupiedRecordVO;
 import my.domain.bookcase.BookCaseVO;
+import my.domain.bookcase.BookRegisterDto;
 import my.domain.bookcase.service.BookCaseService;
+import my.domain.bookowner.vo.BookOwnerVO;
 import my.enums.Role;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,4 +57,13 @@ public class BookCaseController {
         BookCaseOccupiedRecordVO result = bookCaseService.occupy(bookOwnerId, bookCaseId);
         return ApiResponse.created(result);
     }
+
+    @RequireRole(Role.ADMIN)
+    @PostMapping("/{id}/books")
+    public ApiResponse<List<BookVO>> registerBooks(@PathVariable("id") long bookCaseId, @RequestBody List<BookRegisterDto> bookRegisterDtos) {
+        List<BookVO> result = bookCaseService.registerBooks(bookCaseId, bookRegisterDtos);
+        return ApiResponse.created(result);
+    }
+
+
 }

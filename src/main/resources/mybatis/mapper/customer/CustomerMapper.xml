@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.customer.CustomerMapper">
+
+    <resultMap id="customerResultMap" type="my.domain.user.UserVO">
+        <id property="id" column="ID"/>
+        <result property="role" column="ROLE"/>
+        <result property="name" column="NAME"/>
+        <result property="phone" column="PHONE"/>
+        <result property="email" column="EMAIL"/>
+        <result property="residentNumber" column="RESIDENT_NUMBER"/>
+        <result property="password" column="PASSWORD"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="long">
+        INSERT INTO CUSTOMER (ID) VALUES (#{id})
+    </insert>
+
+    <select id="selectAll" resultMap="customerResultMap">
+        SELECT * FROM USERS
+        WHERE ROLE = 'CUSTOMER' AND DELETED_AT IS NULL
+    </select>
+
+    <select id="selectById" parameterType="long" resultMap="customerResultMap">
+        SELECT * FROM USERS
+        WHERE ID = #{id} AND ROLE = 'CUSTOMER' AND DELETED_AT IS NULL
+    </select>
+
+    <update id="updateOne" parameterType="my.domain.user.dto.request.UserUpdateDto">
+        UPDATE USERS
+        <set>
+            <if test="name != null">NAME = #{name},</if>
+            <if test="phone != null">PHONE = #{phone},</if>
+            <if test="email != null">EMAIL = #{email},</if>
+            <if test="password != null">PASSWORD = #{password},</if>
+        </set>
+        WHERE ID = #{id} AND ROLE = 'CUSTOMER' AND DELETED_AT IS NULL
+    </update>
+
+    <update id="softDeleteOne" parameterType="long">
+        UPDATE USERS
+        SET DELETED_AT = CURRENT_TIMESTAMP
+        WHERE ID = #{id} AND ROLE = 'CUSTOMER' AND DELETED_AT IS NULL
+    </update>
+
+</mapper>

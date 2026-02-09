@@ -62,4 +62,16 @@
         WHERE ID = #{id} AND DELETED_AT IS NULL
     </update>
 
+    <select id="selectBookOwnerByNameAndPhone" resultMap="userResultMap">
+        SELECT *
+        FROM USERS
+        WHERE NAME=#{name} AND PHONE=#{phone} AND ROLE='BOOK_OWNER' AND DELETED_AT IS NULL
+    </select>
+
+    <select id="selectUsersByPhoneNumberLastFour" parameterType="String" resultMap="userResultMap">
+        SELECT *
+        FROM USERS
+        WHERE SUBSTR(PHONE, -4) = #{lastFour} AND DELETED_AT IS NULL
+    </select>
+
 </mapper>

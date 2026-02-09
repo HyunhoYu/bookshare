@@ -21,10 +21,12 @@
         WHERE BOOK_OWNER_ID = #{id} AND SETTLED_AT IS NOT NULL
     </select>
 
-    <select id="selectUnSettledByBookOwnerId" parameterType="long" resultMap="settlementResultMap">
-        SELECT *
-        FROM BOOK_OWNER_SETTLEMENT
-        WHERE BOOK_OWNER_ID = #{id} AND SETTLED_AT IS NULL
-    </select>
+    <insert id="insert" parameterType="my.domain.settlement.vo.SettlementVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78238".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO BOOK_OWNER_SETTLEMENT (BOOK_OWNER_ID, SETTLED_AT)
+        VALUES (#{bookOwnerId}, SYSTIMESTAMP)
+    </insert>
 
 </mapper>

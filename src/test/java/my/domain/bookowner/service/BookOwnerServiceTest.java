@@ -5,6 +5,7 @@ import my.domain.book.BookVO;
 import my.domain.bookowner.BookOwnerMapper;
 import my.domain.bookowner.vo.BookOwnerVO;
 import my.domain.settlement.service.SettlementService;
+import my.domain.booksoldrecord.vo.BookSoldRecordVO;
 import my.domain.settlement.vo.SettlementVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -245,7 +246,7 @@ class BookOwnerServiceTest {
             given(settlementService.findUnSettled(1L)).willReturn(Collections.emptyList());
 
             // when
-            List<SettlementVO> result = bookOwnerService.findMyUnSettled(1L);
+            List<BookSoldRecordVO> result = bookOwnerService.findMyUnSettled(1L);
 
             // then
             assertThat(result).isEmpty();

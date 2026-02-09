@@ -26,6 +26,20 @@
         <include refid="whereInStock"/>
     </select>
 
+
+
+    <insert id="insertBook" parameterType="my.domain.book.BookVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78230".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO BOOK (BOOK_OWNER_ID, BOOK_CASE_ID, BOOK_NAME, PUBLISHER_HOUSE, PRICE, ENTERED_AT, COMMON_CODE_ID, STATE)
+        VALUES (#{bookOwnerId}, #{bookCaseId}, #{bookName}, #{publisherHouse}, #{price}, SYSDATE, #{commonCodeId}, #{state})
+    </insert>
+
+    <select id="selectById" parameterType="long" resultMap="bookResultMap">
+        SELECT * FROM BOOK WHERE ID = #{id}
+    </select>
+
     <select id="selectBooksByBookOwnerId" parameterType="long" resultMap="bookResultMap">
         SELECT *
         FROM BOOK
@@ -37,5 +51,9 @@
         FROM BOOK
         WHERE BOOK_OWNER_ID=#{id} AND STATE='SOLD'
     </select>
+
+    <update id="updateStateSold" parameterType="long">
+        UPDATE BOOK SET STATE = 'SOLD' WHERE ID = #{id} AND STATE = 'NORMAL'
+    </update>
 
 </mapper>

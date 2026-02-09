@@ -6,6 +6,7 @@ import my.domain.book.BookService;
 import my.domain.book.BookVO;
 import my.domain.bookowner.BookOwnerMapper;
 import my.domain.bookowner.vo.BookOwnerVO;
+import my.domain.booksoldrecord.vo.BookSoldRecordVO;
 import my.domain.settlement.service.SettlementService;
 import my.domain.settlement.vo.SettlementVO;
 import org.springframework.stereotype.Service;
@@ -51,7 +52,7 @@ public class BookOwnerServiceImpl implements BookOwnerService{
     }
 
     @Override
-    public List<SettlementVO> findMyUnSettled(Long bookOwnerId) {
+    public List<BookSoldRecordVO> findMyUnSettled(Long bookOwnerId) {
         return settlementService.findUnSettled(bookOwnerId);
     }
 }

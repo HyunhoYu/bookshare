@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sudo apt install:*)",
+      "Bash(echo:*)",
+      "Bash(tmux:*)",
+      "Bash(apt list:*)",
+      "Bash(/usr/local/bin/tmux:*)"
+    ]
+  }
+}

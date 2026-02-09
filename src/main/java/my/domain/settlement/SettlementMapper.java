@@ -10,5 +10,5 @@ public interface SettlementMapper {
 
     List<SettlementVO> selectAllByBookOwnerId(Long bookOwnerId);
     List<SettlementVO> selectSettledByBookOwnerId(Long bookOwnerId);
-    List<SettlementVO> selectUnSettledByBookOwnerId(Long bookOwnerId);
+    int insert(SettlementVO settlementVO);
 }

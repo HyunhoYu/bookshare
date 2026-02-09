@@ -6,6 +6,7 @@ import my.common.response.ApiResponse;
 import my.domain.book.BookVO;
 import my.domain.bookowner.service.BookOwnerService;
 import my.domain.bookowner.vo.BookOwnerVO;
+import my.domain.booksoldrecord.vo.BookSoldRecordVO;
 import my.domain.settlement.vo.SettlementVO;
 import my.enums.Role;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -65,8 +66,8 @@ public class BookOwnerController {
 
     @RequireRole(value = {Role.ADMIN, Role.BOOK_OWNER}, checkOwnership = true)
     @GetMapping("/{id}/settlements/pending")
-    public ApiResponse<List<SettlementVO>> findMyUnSettled(@PathVariable("id") long id) {
-        List<SettlementVO> myUnSettled = bookOwnerService.findMyUnSettled(id);
+    public ApiResponse<List<BookSoldRecordVO>> findMyUnSettled(@PathVariable("id") long id) {
+        List<BookSoldRecordVO> myUnSettled = bookOwnerService.findMyUnSettled(id);
         return ApiResponse.success(myUnSettled);
     }
 }

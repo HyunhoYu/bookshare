@@ -33,6 +33,7 @@ public class JwtFilter implements Filter {
         List<String> whiteList = List.of(
                 "/api/auth/login",
                 "/api/auth/book-owner",
+                "/api/auth/customer",
                 "/api/customer/books"
         );
 

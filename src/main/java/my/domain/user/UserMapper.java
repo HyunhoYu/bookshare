@@ -2,6 +2,7 @@ package my.domain.user;
 
 import my.domain.user.dto.request.UserUpdateDto;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -14,5 +15,7 @@ public interface UserMapper {
     List<UserVO> selectAll();
     int updateOne(UserUpdateDto dto);
     int softDeleteOne(Long id);
+    UserVO selectBookOwnerByNameAndPhone(@Param("name") String name, @Param("phone") String phone);
+    List<UserVO> selectUsersByPhoneNumberLastFour(@Param("lastFour") String lastFour);
 
 }
