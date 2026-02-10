@@ -36,6 +36,12 @@ public enum ErrorCode {
     SETTLEMENT_SALE_RECORD_OWNER_MISMATCH("해당 책소유주의 판매기록이 아닙니다", 400),
     SETTLEMENT_ALREADY_SETTLED("이미 정산된 판매기록이 포함되어 있습니다", 409),
     EMPTY_SETTLEMENT_REQUEST("정산할 판매기록 목록이 비어있습니다", 400),
+    EMPTY_RETRIEVE_REQUEST("회수할 책 목록이 비어있습니다", 400),
+    BOOK_NOT_RETRIEVABLE("회수 대기 상태가 아닌 책이 포함되어 있습니다", 400),
+    RETRIEVE_FAIL("책 회수 처리 실패", 500),
+    EMPTY_UNOCCUPY_REQUEST("점유 해제할 책장 목록이 비어있습니다", 400),
+    BOOK_CASE_NOT_OCCUPIED("점유 중이 아닌 책장입니다", 400),
+    UNOCCUPY_FAIL("점유 해제 처리 실패", 500),
     ;
 
     private final String message;

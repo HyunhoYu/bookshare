@@ -39,7 +39,7 @@
 | 12 | GET | `/books/should-retrieve` | 회수 대기 목록 | |
 | 13 | POST | `/books/{id}/retrieve` | 책 회수 완료 | 단건 |
 | 14 | POST | `/books/retrieve-batch` | 책 일괄 회수 | 다건 |
-
+~~~~
 ### Phase 6: 조회 API (기구현 + 추가)
 | 순서 | Method | Endpoint | 설명 | 상태 |
 |-----|--------|----------|------|------|

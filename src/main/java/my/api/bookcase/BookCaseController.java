@@ -37,9 +37,9 @@ public class BookCaseController {
     }
 
     @RequireRole(Role.ADMIN)
-    @GetMapping("/{id}")
-    public ApiResponse<BookCaseVO> findById(@PathVariable("id") long id) {
-        return ApiResponse.success(bookCaseService.findById(id));
+    @GetMapping("/{book-case-id}")
+    public ApiResponse<BookCaseVO> findById(@PathVariable("book-case-id") long bookCaseId) {
+        return ApiResponse.success(bookCaseService.findById(bookCaseId));
     }
 
     @RequireRole({Role.ADMIN, Role.BOOK_OWNER})
@@ -50,20 +50,43 @@ public class BookCaseController {
         return ApiResponse.success(result);
     }
 
-    @RequireRole({Role.ADMIN, Role.BOOK_OWNER})
-    @PostMapping("/{id}/occupy")
-    public ApiResponse<BookCaseOccupiedRecordVO> occupy(@PathVariable("id") long bookCaseId, HttpServletRequest request) {
+    @RequireRole(Role.ADMIN)
+    @PostMapping("/{book-case-id}/occupy")
+    public ApiResponse<BookCaseOccupiedRecordVO> occupy(@PathVariable("book-case-id") long bookCaseId, HttpServletRequest request) {
         long bookOwnerId = (long) request.getAttribute("userId");
         BookCaseOccupiedRecordVO result = bookCaseService.occupy(bookOwnerId, bookCaseId);
         return ApiResponse.created(result);
     }
 
     @RequireRole(Role.ADMIN)
-    @PostMapping("/{id}/books")
-    public ApiResponse<List<BookVO>> registerBooks(@PathVariable("id") long bookCaseId, @RequestBody List<BookRegisterDto> bookRegisterDtos) {
+    @PostMapping("/{book-case-id}/books")
+    public ApiResponse<List<BookVO>> registerBooks(@PathVariable("book-case-id") long bookCaseId, @RequestBody List<BookRegisterDto> bookRegisterDtos) {
         List<BookVO> result = bookCaseService.registerBooks(bookCaseId, bookRegisterDtos);
         return ApiResponse.created(result);
     }
+
+
+    @RequireRole(value = {Role.ADMIN, Role.BOOK_OWNER}, checkOwnership = true)
+    @GetMapping("/{bookowner-id}")
+    public ApiResponse<List<Long>> findMyBookCases(@PathVariable("bookowner-id") long bookOwnerId) {
+        List<Long> ids = bookCaseService.selectMyOccupyingBookCasesByBookOwnerId(bookOwnerId);
+        return ApiResponse.success(ids);
+    }
+
+    @RequireRole(Role.ADMIN)
+    @PostMapping("/unoccupy")
+    public ApiResponse<List<Long>> unOccupyAndChangeBookState(@RequestBody List<Long> bookCaseIds) {
+        List<Long> changedBookIds = bookCaseService.unOccupyProcess(bookCaseIds);
+        return ApiResponse.success(changedBookIds);
+    }
+
+
+
+
+
+
+
+
 
 
 }

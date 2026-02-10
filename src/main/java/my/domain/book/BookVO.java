@@ -19,6 +19,7 @@ public class BookVO {
     private String groupCodeId;
     private String commonCodeId;
     private String state;
+    private Date deletedAt;
 
     public BookVO() {
         setState(BookState.NORMAL.name());

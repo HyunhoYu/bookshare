@@ -6,6 +6,7 @@ import my.domain.bookcase.BookCaseVO;
 import my.domain.bookcase.BookRegisterDto;
 
 import java.util.List;
+import java.util.Map;
 
 public interface BookCaseService {
 
@@ -16,4 +17,6 @@ public interface BookCaseService {
     boolean isOccupied(long bookCaseId);
     BookCaseOccupiedRecordVO occupy(long bookOwnerId, long bookCaseId);
     List<BookVO> registerBooks(long bookcaseId, List<BookRegisterDto> bookRegisterDtos);
+    List<Long> selectMyOccupyingBookCasesByBookOwnerId(Long bookOwnerId);
+    List<Long> unOccupyProcess(List<Long> bookCaseIds);
 }

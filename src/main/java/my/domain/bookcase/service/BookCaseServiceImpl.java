@@ -151,5 +151,50 @@ public class BookCaseServiceImpl implements BookCaseService {
         return userMapper.selectBookOwnerByNameAndPhone(name, phone);
     }
 
+    @Override
+    public List<Long> selectMyOccupyingBookCasesByBookOwnerId(Long bookOwnerId) {
+        return bookCaseMapper.selectMyOccupyingBookCasesByBookOwnerId(bookOwnerId);
+    }
+
+
+    @Override
+    @Transactional
+    public List<Long> unOccupyProcess(List<Long> bookCaseIds) {
+        validateBookCaseIdsNotEmpty(bookCaseIds);
+
+        for (Long bookCaseId : bookCaseIds) {
+            validateBookCaseExists(bookCaseId);
+            validateCurrentlyOccupied(occupiedRecordMapper.selectCurrentByBookCaseId(bookCaseId));
+        }
+
+        int result = occupiedRecordMapper.unOccupyBookCases(bookCaseIds);
+        validateUnoccupyResult(result, bookCaseIds.size());
+
+        List<Long> bookIds = bookMapper.selectNormalBookIdsByBookCaseIds(bookCaseIds);
+        if (!bookIds.isEmpty()) {
+            bookMapper.updateStateNormalToRetrieve(bookIds);
+        }
+
+        return bookIds;
+    }
+
+    private void validateBookCaseIdsNotEmpty(List<Long> bookCaseIds) {
+        if (bookCaseIds == null || bookCaseIds.isEmpty()) {
+            throw new ApplicationException(ErrorCode.EMPTY_UNOCCUPY_REQUEST);
+        }
+    }
+
+    private void validateCurrentlyOccupied(BookCaseOccupiedRecordVO record) {
+        if (record == null) {
+            throw new ApplicationException(ErrorCode.BOOK_CASE_NOT_OCCUPIED);
+        }
+    }
+
+    private void validateUnoccupyResult(int result, int expected) {
+        if (result != expected) {
+            throw new ApplicationException(ErrorCode.UNOCCUPY_FAIL);
+        }
+    }
+
 
 }

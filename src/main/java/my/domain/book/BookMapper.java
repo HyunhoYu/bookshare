@@ -3,6 +3,7 @@ package my.domain.book;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface BookMapper {
@@ -13,5 +14,9 @@ public interface BookMapper {
     int insertBook(BookVO bookVO);
     BookVO selectById(Long id);
     int updateStateSold(Long id);
+    List<Long> selectNormalBookIdsByBookCaseIds(@Param("bookCaseIds") List<Long> bookCaseIds);
+    int updateStateNormalToRetrieve(List<Long>bookIds);
+    int softDeleteBooks(@Param("bookIds") List<Long> bookIds);
+    int countByIdsAndState(@Param("bookIds") List<Long> bookIds, @Param("state") String state);
 
 }

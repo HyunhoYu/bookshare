@@ -23,6 +23,16 @@
         SELECT * FROM BOOK_CASE_OCCUPIED_RECORD WHERE ID = #{id}
     </select>
 
+    <select id="selectOccupiedRecordByIds" parameterType="List" resultMap="occupiedRecordResultMap">
+        SELECT *
+        FROM  BOOK_CASE_OCCUPIED_RECORD
+        WHERE ID IN
+        <foreach collection="occupiedRecordIds" item="occupiedRecordId" open="(" separator="," close=")">
+            #{occupiedRecordId}
+        </foreach>
+    </select>
+
+
     <!-- 현재 점유 중인 레코드 조회 (un_occupied_at IS NULL) -->
     <select id="selectCurrentByBookCaseId" parameterType="long" resultMap="occupiedRecordResultMap">
         SELECT * FROM BOOK_CASE_OCCUPIED_RECORD
@@ -48,5 +58,19 @@
         SELECT COUNT(*) FROM BOOK_CASE_OCCUPIED_RECORD
         WHERE BOOK_CASE_ID = #{bookCaseId} AND UN_OCCUPIED_AT IS NULL
     </select>
+
+    <update id="unOccupyBookCases">
+        UPDATE BOOK_CASE_OCCUPIED_RECORD
+        SET UN_OCCUPIED_AT = SYSTIMESTAMP
+        WHERE BOOK_CASE_ID IN
+        <foreach collection="bookCaseIds" item="bookCaseId" open="(" separator="," close=")">
+            #{bookCaseId}
+        </foreach>
+        AND UN_OCCUPIED_AT IS NULL
+    </update>
+
+
+
+
 
 </mapper>

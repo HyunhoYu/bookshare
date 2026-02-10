@@ -35,5 +35,21 @@
         )
     </select>
 
+    <select id="selectMyOccupyingBookCasesByBookOwnerId" resultType="List">
+        SELECT BC.ID
+        FROM BOOK_CASE BC
+        JOIN BOOK_CASE_OCCUPIED_RECORD OC ON BC.ID = OC.BOOK_CASE_ID
+        WHERE OC.BOOK_OWNER_ID = #{bookOwnerId}
+        AND OC.UN_OCCUPIED_AT IS NULL
+    </select>
+
+    <select id="selectBookShouldBeChangedIds" parameterType="List" resultType="List">
+
+        FROM BOOK_CASE BC
+        JOIN BOOK_CASE_OCCUPIED_RECORD BCOR
+        ON BC.ID = BCOR.BOOK_CASE_ID
+
+    </select>
+
 
 </mapper>

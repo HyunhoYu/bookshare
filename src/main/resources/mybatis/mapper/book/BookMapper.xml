@@ -14,6 +14,7 @@
         <result property="groupCodeId" column="GROUP_CODE_ID"/>
         <result property="commonCodeId" column="COMMON_CODE_ID"/>
         <result property="state" column="STATE"/>
+        <result property="deletedAt" column="DELETED_AT"/>
     </resultMap>
 
     <sql id="whereInStock">
@@ -55,5 +56,43 @@
     <update id="updateStateSold" parameterType="long">
         UPDATE BOOK SET STATE = 'SOLD' WHERE ID = #{id} AND STATE = 'NORMAL'
     </update>
+
+    <select id="selectByBookCaseIds" parameterType="List" resultType="List">
+        SELECT B.ID
+        FROM BOOK B
+        WHERE B.BOOK_CASE_ID IN
+        <foreach collection="bookCaseIds" item="bookCaseId" open="(" separator="," close=")">
+            #{bookCaseId}
+        </foreach>
+        AND B.STATE = 'NORMAL'
+    </select>
+
+    <update id="updateStateNormalToRetrieve" parameterType="List">
+        UPDATE BOOK SET STATE = 'SHOULD_BE_RETRIEVED'
+        WHERE ID IN
+        <foreach collection="bookIds" item="bookId" open="(" separator="," close=")">
+            #{bookId}
+        </foreach>
+        AND STATE = 'NORMAL'
+    </update>
+
+    <update id="softDeleteBooks">
+        UPDATE BOOK SET DELETED_AT = SYSTIMESTAMP
+        WHERE ID IN
+        <foreach collection="bookIds" item="bookId" open="(" separator="," close=")">
+            #{bookId}
+        </foreach>
+        AND STATE = 'SHOULD_BE_RETRIEVED'
+        AND DELETED_AT IS NULL
+    </update>
+
+    <select id="countByIdsAndState" resultType="int">
+        SELECT COUNT(*) FROM BOOK
+        WHERE ID IN
+        <foreach collection="bookIds" item="bookId" open="(" separator="," close=")">
+            #{bookId}
+        </foreach>
+        AND STATE = #{state}
+    </select>
 
 </mapper>

@@ -14,11 +14,16 @@ DB_PASSWORD=Paperplane!23
 JWT_SECRET=thisissecretkey991209bookshare1234567890
 ```
 
+### Admin 계정
+- email: `admin@bookshare.com` / password: `test123`
+
 ### sqlplus 접근 방법 (WSL 환경)
 ```bash
-# 비밀번호에 !가 있으므로 반드시 이스케이프
-cmd.exe /c "sqlplus -S system/\"Paperplane!23\"@127.0.0.1:1521/XE @C:\Users\tit\파일명.sql"
+# NLS_LANG 필수 (없으면 비밀번호 인코딩 불일치로 ORA-01017 발생)
+# set NLS_LANG=...&& 사이에 공백 없이 붙여야 함
+cmd.exe /c "set NLS_LANG=AMERICAN_AMERICA.AL32UTF8&& sqlplus -S system/\"Paperplane!23\"@127.0.0.1:1521/XE @C:\Users\tit\파일명.sql"
 ```
+- **주의**: SQL 파일은 반드시 Windows 경로(`C:\Users\tit\`)에 위치해야 함. `/tmp/` 등 Linux 경로는 sqlplus에서 접근 불가
 - **주의**: sqlplus SQL 파일에 한글 주석 넣으면 인코딩 깨져서 INSERT/UPDATE 실패함. 한글 데이터는 UNISTR 사용하거나 주석은 영문으로.
 
 ## 프로젝트 구조
@@ -76,14 +81,26 @@ SETTLEMENT_RATIO         → ISEQ$$_77702
 5. 이미 정산된 기록이 아닌지
 6. BOOK_OWNER_SETTLEMENT INSERT → sale_record들의 settlement_id UPDATE
 
+### 조건부 Unique Index 패턴
+Oracle의 "NULL은 인덱스에서 제외" 특성을 이용한 패턴:
+```sql
+CREATE UNIQUE INDEX 인덱스명 ON 테이블 (
+    CASE WHEN 조건컬럼 IS NULL THEN 유니크대상컬럼 END
+);
+```
+적용 현황:
+- USERS.EMAIL: DELETED_AT IS NULL인 행만 UNIQUE (소프트 삭제된 이메일 재사용 가능)
+- BOOK_CASE_OCCUPIED_RECORD: UN_OCCUPIED_AT IS NULL인 행만 BOOK_CASE_ID UNIQUE (책장당 활성 점유 1건 제한)
+
 ### 소프트 삭제
 - USERS 테이블의 DELETED_AT 컬럼 사용 (NULL이면 활성)
-- USERS.EMAIL에 조건부 UNIQUE 인덱스 적용됨 (DELETED_AT IS NULL인 행만)
+- BOOK 테이블의 DELETED_AT 컬럼 사용 (회수 완료 시 SYSTIMESTAMP 세팅)
 
 ### Book 상태 전이
 ```
 NORMAL → SOLD (판매 시)
 NORMAL → SHOULD_BE_RETRIEVED (임대 종료 시)
+SHOULD_BE_RETRIEVED → soft delete (회수 시, DELETED_AT = SYSTIMESTAMP)
 ```
 
 ## 개발 진행 상황

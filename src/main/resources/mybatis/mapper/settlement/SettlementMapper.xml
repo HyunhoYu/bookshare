@@ -9,6 +9,12 @@
         <result property="settledAt" column="SETTLED_AT"/>
     </resultMap>
 
+    <select id="selectById" parameterType="long" resultMap="settlementResultMap">
+        SELECT *
+        FROM BOOK_OWNER_SETTLEMENT
+        WHERE ID = #{id}
+    </select>
+
     <select id="selectAllByBookOwnerId" parameterType="long" resultMap="settlementResultMap">
         SELECT *
         FROM BOOK_OWNER_SETTLEMENT

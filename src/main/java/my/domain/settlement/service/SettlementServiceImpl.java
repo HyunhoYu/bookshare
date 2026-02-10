@@ -103,6 +103,6 @@ public class SettlementServiceImpl implements SettlementService{
             throw new ApplicationException(ErrorCode.SETTLEMENT_INSERT_FAIL);
         }
 
-        return settlementVO;
+        return settlementMapper.selectById(settlementVO.getId());
     }
 }

@@ -1,6 +1,7 @@
 package my.domain.bookcase;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -13,4 +14,6 @@ public interface BookCaseOccupiedRecordMapper {
     List<BookCaseOccupiedRecordVO> selectByBookOwnerId(long bookOwnerId);
     int updateUnOccupiedAt(long id);
     int countCurrentOccupied(long bookCaseId);
+    int unOccupyBookCases(@Param("bookCaseIds") List<Long> bookCaseIds);
+    List<BookCaseOccupiedRecordVO> selectOccupiedRecordByIds(@Param("occupiedRecordIds") List<Long> occupiedRecordIds);
 }

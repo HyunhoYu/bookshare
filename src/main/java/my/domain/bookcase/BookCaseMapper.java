@@ -11,4 +11,5 @@ public interface BookCaseMapper {
     BookCaseVO selectById(long id);
     List<BookCaseVO> selectAll();
     List<BookCaseVO> selectUsableBookCases();
+    List<Long> selectMyOccupyingBookCasesByBookOwnerId(Long bookOwnerId);
 }
