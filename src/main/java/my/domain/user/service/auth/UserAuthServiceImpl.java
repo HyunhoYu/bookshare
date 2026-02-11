@@ -1,10 +1,10 @@
 package my.domain.user.service.auth;
 
+import static my.common.util.EntityUtil.requireNonNull;
+
 import lombok.RequiredArgsConstructor;
+import my.common.exception.ApplicationException;
 import my.common.exception.ErrorCode;
-import my.common.exception.InCorrectPasswordException;
-import my.common.exception.UserInsertFailException;
-import my.common.exception.UserNotFoundException;
 import my.domain.user.UserMapper;
 import my.domain.user.UserVO;
 import my.domain.user.dto.request.LoginRequestDto;
@@ -26,10 +26,20 @@ public class UserAuthServiceImpl implements UserAuthService {
 
     @Override
     public int save(UserVO userVO) {
+        if (findByEmail(userVO.getEmail()) != null) {
+            throw new ApplicationException(ErrorCode.DUPLICATE_EMAIL);
+        }
+        if (findByPhone(userVO.getPhone()) != null) {
+            throw new ApplicationException(ErrorCode.DUPLICATE_PHONE);
+        }
+        if (findByResidentNumber(userVO.getResidentNumber()) != null) {
+            throw new ApplicationException(ErrorCode.DUPLICATE_RESIDENT_NUMBER);
+        }
+
         int result = userMapper.insert(userVO);
 
         if (result != 1) {
-            throw new UserInsertFailException(ErrorCode.USER_INSERT_FAIL);
+            throw new ApplicationException(ErrorCode.USER_INSERT_FAIL);
         }
 
         return result;
@@ -39,17 +49,13 @@ public class UserAuthServiceImpl implements UserAuthService {
     @Override
     public UserVO login(LoginRequestDto loginRequestDto) {
         String email = loginRequestDto.getEmail();
-        UserVO user = this.findByEmail(email);
-
-        if (user == null) {
-            throw new UserNotFoundException(ErrorCode.USER_NOT_FOUND);
-        }
+        UserVO user = requireNonNull(this.findByEmail(email), ErrorCode.USER_NOT_FOUND);
 
         String storedPassword = user.getPassword();
         String inputPassword = loginRequestDto.getPassword();
 
         if (!passwordEncoder.matches(inputPassword, storedPassword)) {
-            throw new InCorrectPasswordException(ErrorCode.INCORRECT_PASSWORD);
+            throw new ApplicationException(ErrorCode.INCORRECT_PASSWORD);
         }
 
         return user;
@@ -61,14 +67,21 @@ public class UserAuthServiceImpl implements UserAuthService {
     }
 
     @Override
+    public UserVO findByPhone(String phone) {
+        return userMapper.selectByPhone(phone);
+    }
+
+    @Override
+    public UserVO findByResidentNumber(String residentNumber) {
+        return userMapper.selectByResidentNumber(residentNumber);
+    }
+
+    @Override
     @Transactional
     public UserVO createUser(UserVO userVO) {
         save(userVO);
         return userVO;
     }
-
-
-
 
 
 

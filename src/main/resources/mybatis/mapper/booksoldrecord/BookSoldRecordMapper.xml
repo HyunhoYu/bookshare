@@ -76,4 +76,16 @@
         </foreach>
     </update>
 
+    <select id="sumAmountsByIds" resultType="map">
+        SELECT
+            NVL(SUM(BSR.SOLD_PRICE), 0) as "totalAmount",
+            NVL(SUM(FLOOR(BSR.SOLD_PRICE * SR.OWNER_RATIO)), 0) as "ownerAmount"
+        FROM BOOK_SALE_RECORD BSR
+        JOIN SETTLEMENT_RATIO SR ON BSR.RATIO_ID = SR.ID
+        WHERE BSR.ID IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>

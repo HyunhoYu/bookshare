@@ -12,6 +12,7 @@ import my.domain.user.dto.request.UserJoinRequestDto;
 import my.domain.user.service.auth.UserAuthService;
 import my.jwt.JwtProvider;
 import my.jwt.JwtTokenResponseDto;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,14 +27,14 @@ public class AuthApiController {
 
 
     @PostMapping("/login")
-    public ApiResponse<JwtTokenResponseDto> login(@RequestBody LoginRequestDto loginRequestDto) {
+    public ApiResponse<JwtTokenResponseDto> login(@RequestBody @Valid LoginRequestDto loginRequestDto) {
         UserVO user = userAuthService.login(loginRequestDto);
         String token = jwtProvider.createToken(user);
         return ApiResponse.success(new JwtTokenResponseDto(token));
     }
 
     @PostMapping("/book-owner")
-    public ApiResponse<JwtTokenResponseDto> registerBookOwner(@RequestBody BookOwnerJoinRequestDto dto) {
+    public ApiResponse<JwtTokenResponseDto> registerBookOwner(@RequestBody @Valid BookOwnerJoinRequestDto dto) {
         BookOwnerVO bookOwner = bookOwnerAuthService.signup(dto);
 
         String token = jwtProvider.createToken(bookOwner);
@@ -42,7 +43,7 @@ public class AuthApiController {
     }
 
     @PostMapping("/customer")
-    public ApiResponse<JwtTokenResponseDto> registerCustomer(@RequestBody UserJoinRequestDto dto) {
+    public ApiResponse<JwtTokenResponseDto> registerCustomer(@RequestBody @Valid UserJoinRequestDto dto) {
         UserVO customer = customerAuthService.signup(dto);
         String token = jwtProvider.createToken(customer);
         return ApiResponse.created(new JwtTokenResponseDto(token));

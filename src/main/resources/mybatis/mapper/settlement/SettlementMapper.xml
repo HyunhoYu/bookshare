@@ -7,6 +7,11 @@
         <id property="id" column="ID"/>
         <result property="bookOwnerId" column="BOOK_OWNER_ID"/>
         <result property="settledAt" column="SETTLED_AT"/>
+        <result property="totalAmount" column="TOTAL_AMOUNT"/>
+        <result property="ownerAmount" column="OWNER_AMOUNT"/>
+        <result property="storeAmount" column="STORE_AMOUNT"/>
+        <result property="payoutKey" column="PAYOUT_KEY"/>
+        <result property="transferStatus" column="TRANSFER_STATUS"/>
     </resultMap>
 
     <select id="selectById" parameterType="long" resultMap="settlementResultMap">
@@ -31,8 +36,8 @@
         <selectKey keyProperty="id" resultType="long" order="AFTER">
             SELECT "ISEQ$$_78238".CURRVAL FROM DUAL
         </selectKey>
-        INSERT INTO BOOK_OWNER_SETTLEMENT (BOOK_OWNER_ID, SETTLED_AT)
-        VALUES (#{bookOwnerId}, SYSTIMESTAMP)
+        INSERT INTO BOOK_OWNER_SETTLEMENT (BOOK_OWNER_ID, SETTLED_AT, TOTAL_AMOUNT, OWNER_AMOUNT, STORE_AMOUNT, PAYOUT_KEY, TRANSFER_STATUS)
+        VALUES (#{bookOwnerId}, SYSTIMESTAMP, #{totalAmount}, #{ownerAmount}, #{storeAmount}, #{payoutKey, jdbcType=VARCHAR}, #{transferStatus})
     </insert>
 
 </mapper>

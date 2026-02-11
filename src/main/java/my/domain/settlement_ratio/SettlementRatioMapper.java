@@ -9,8 +9,8 @@ import java.util.List;
 @Mapper
 public interface SettlementRatioMapper {
 
-    int insertNewRatio(SettlementRatioVO settlementRatioVO);
-    SettlementRatioVO selectCurrentRatio();
-    List<SettlementRatioVO> selectAllRatios();
+    int insert(SettlementRatioVO settlementRatioVO);
+    SettlementRatioVO selectCurrent();
+    List<SettlementRatioVO> selectAll();
     SettlementRatioVO selectById(long id);
 }

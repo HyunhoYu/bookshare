@@ -1,13 +1,16 @@
 package my.domain.user.service;
 
+import static my.common.util.EntityUtil.requireNonNull;
+
 import lombok.RequiredArgsConstructor;
+import my.common.exception.ApplicationException;
 import my.common.exception.ErrorCode;
-import my.common.exception.UserNotFoundException;
 import my.domain.user.UserMapper;
 import my.domain.user.UserVO;
 import my.domain.user.dto.request.UserUpdateDto;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -29,7 +32,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserVO updateOne(UserUpdateDto dto, Long id) {
+    @Transactional
+    public UserVO update(Long id, UserUpdateDto dto) {
         dto.setId(id);
 
         if (dto.getPassword() != null) {
@@ -37,23 +41,20 @@ public class UserServiceImpl implements UserService {
             dto.setPassword(encodedPassword);
         }
 
-
-        int result = userMapper.updateOne(dto);
+        int result = userMapper.update(dto);
         if (result == 1) {
             return userMapper.selectById(id);
         }
 
-        throw new UserNotFoundException(ErrorCode.USER_NOT_FOUND);
+        throw new ApplicationException(ErrorCode.USER_NOT_FOUND);
     }
 
     @Override
-    public void deleteOne(Long id) {
-
-        UserVO user = userMapper.selectById(id);
-        if (user == null) throw new UserNotFoundException(ErrorCode.USER_NOT_FOUND);
+    @Transactional
+    public void delete(Long id) {
+        requireNonNull(userMapper.selectById(id), ErrorCode.USER_NOT_FOUND);
         int result = userMapper.softDeleteOne(id);
 
-        if (result != 1) throw new UserNotFoundException(ErrorCode.USER_NOT_FOUND);
-
+        if (result != 1) throw new ApplicationException(ErrorCode.USER_NOT_FOUND);
     }
 }

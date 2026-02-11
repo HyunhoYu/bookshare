@@ -12,4 +12,9 @@ import my.common.vo.MyApplicationVO;
 public class SettlementVO extends MyApplicationVO {
     private Long bookOwnerId;
     private Timestamp settledAt;
+    private int totalAmount;
+    private int ownerAmount;
+    private int storeAmount;
+    private String payoutKey;
+    private String transferStatus;
 }

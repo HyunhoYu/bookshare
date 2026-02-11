@@ -1,5 +1,7 @@
 package my.domain.customer.service;
 
+import static my.common.util.EntityUtil.requireNonNull;
+
 import lombok.RequiredArgsConstructor;
 import my.common.exception.ApplicationException;
 import my.common.exception.ErrorCode;
@@ -23,32 +25,22 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public UserVO findOne(Long id) {
-        UserVO customer = customerMapper.selectById(id);
-        if (customer == null) {
-            throw new ApplicationException(ErrorCode.CUSTOMER_NOT_FOUND);
-        }
-        return customer;
+    public UserVO findById(Long id) {
+        return requireNonNull(customerMapper.selectById(id), ErrorCode.CUSTOMER_NOT_FOUND);
     }
 
     @Override
     @Transactional
     public UserVO update(UserUpdateDto dto) {
-        UserVO customer = customerMapper.selectById(dto.getId());
-        if (customer == null) {
-            throw new ApplicationException(ErrorCode.CUSTOMER_NOT_FOUND);
-        }
-        customerMapper.updateOne(dto);
+        requireNonNull(customerMapper.selectById(dto.getId()), ErrorCode.CUSTOMER_NOT_FOUND);
+        customerMapper.update(dto);
         return customerMapper.selectById(dto.getId());
     }
 
     @Override
     @Transactional
     public void delete(Long id) {
-        UserVO customer = customerMapper.selectById(id);
-        if (customer == null) {
-            throw new ApplicationException(ErrorCode.CUSTOMER_NOT_FOUND);
-        }
+        requireNonNull(customerMapper.selectById(id), ErrorCode.CUSTOMER_NOT_FOUND);
         customerMapper.softDeleteOne(id);
     }
 }

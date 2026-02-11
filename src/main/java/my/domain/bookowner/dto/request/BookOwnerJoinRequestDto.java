@@ -1,5 +1,6 @@
 package my.domain.bookowner.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,9 @@ import my.domain.user.dto.request.UserJoinRequestDto;
 @SuperBuilder
 public class BookOwnerJoinRequestDto extends UserJoinRequestDto {
 
-    // 계좌 정보
-    private String bankName;          // 은행명
-    private String accountNumber;     // 계좌번호
+    @NotBlank(message = "은행명은 필수입니다")
+    private String bankName;
+
+    @NotBlank(message = "계좌번호는 필수입니다")
+    private String accountNumber;
 }

@@ -7,6 +7,6 @@ import lombok.Setter;
 @Setter
 public class BookCaseVO {
     private Long id;
-    private String locationCode;
+    private String commonCodeId;
     private Long bookCaseTypeId;
 }

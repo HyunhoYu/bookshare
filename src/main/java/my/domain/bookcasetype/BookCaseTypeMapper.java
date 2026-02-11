@@ -7,7 +7,8 @@ import java.util.List;
 @Mapper
 public interface BookCaseTypeMapper {
 
-    int insertBookCaseType(BookCaseTypeVO bookCaseTypeVO);
+    int insert(BookCaseTypeVO bookCaseTypeVO);
     BookCaseTypeVO selectById(long id);
+    BookCaseTypeVO selectByCode(String code);
     List<BookCaseTypeVO> selectAll();
 }

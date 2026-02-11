@@ -27,7 +27,7 @@
         WHERE ID = #{id} AND ROLE = 'CUSTOMER' AND DELETED_AT IS NULL
     </select>
 
-    <update id="updateOne" parameterType="my.domain.user.dto.request.UserUpdateDto">
+    <update id="update" parameterType="my.domain.user.dto.request.UserUpdateDto">
         UPDATE USERS
         <set>
             <if test="name != null">NAME = #{name},</if>

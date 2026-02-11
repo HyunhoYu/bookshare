@@ -3,9 +3,10 @@ package my.domain.settlement.service;
 import my.domain.book.BookMapper;
 import my.domain.book.BookVO;
 import my.domain.bookcase.BookRegisterDto;
+import my.domain.bookcase.BookCaseCreateDto;
 import my.domain.bookcase.BookCaseVO;
 import my.domain.bookcase.service.BookCaseService;
-import my.domain.bookcasetype.BookCaseTypeVO;
+import my.domain.bookcasetype.BookCaseTypeCreateDto;
 import my.domain.bookcasetype.service.BookCaseTypeService;
 import my.domain.bookowner.dto.request.BookOwnerJoinRequestDto;
 import my.domain.bookowner.service.auth.BookOwnerAuthService;
@@ -70,15 +71,16 @@ class FindAllUnsettledTest {
         SettlementRatioVO ratioVO = new SettlementRatioVO();
         ratioVO.setOwnerRatio(0.7);
         ratioVO.setStoreRatio(0.3);
-        settlementRatioService.setRatio(ratioVO);
+        settlementRatioService.create(ratioVO);
 
         // 고객 생성
+        String custCode = uniqueCode();
         UserVO customer = customerAuthService.signup(UserJoinRequestDto.builder()
                 .name("테스트고객")
-                .email("unsettled-cust-" + uniqueCode() + "@test.com")
-                .phone("010-9999-8888")
+                .email("unsettled-cust-" + custCode + "@test.com")
+                .phone("010-" + custCode.substring(0, 4) + "-" + custCode.substring(4))
                 .password("password123")
-                .residentNumber("950505-2345678")
+                .residentNumber(custCode + "-2345678")
                 .build());
         customerId = customer.getId();
     }
@@ -87,16 +89,16 @@ class FindAllUnsettledTest {
         String code = uniqueCode();
 
         // 책장 타입 생성
-        BookCaseTypeVO typeVO = new BookCaseTypeVO();
-        typeVO.setCode(code);
-        typeVO.setMonthlyPrice(50000);
-        long typeId = bookCaseTypeService.addBookCaseType(typeVO);
+        BookCaseTypeCreateDto typeDto = new BookCaseTypeCreateDto();
+        typeDto.setCode(code);
+        typeDto.setMonthlyPrice(50000);
+        long typeId = bookCaseTypeService.create(typeDto);
 
         // 책장 생성
-        BookCaseVO caseVO = new BookCaseVO();
-        caseVO.setLocationCode("LOC-" + code);
-        caseVO.setBookCaseTypeId(typeId);
-        long bookCaseId = bookCaseService.addBookCase(caseVO);
+        BookCaseCreateDto caseDto = new BookCaseCreateDto();
+        caseDto.setLocationName("1층 A구역");
+        caseDto.setBookCaseTypeId(typeId);
+        long bookCaseId = bookCaseService.create(caseDto);
 
         // BookOwner 생성 + 책장 점유 (이름/전화번호를 고유하게)
         String ownerName = "오너" + code;
@@ -106,11 +108,11 @@ class FindAllUnsettledTest {
                 .email(emailPrefix + "-" + code + "@test.com")
                 .phone(ownerPhone)
                 .password("password123")
-                .residentNumber("990101-1234567")
+                .residentNumber(code + "-1234567")
                 .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), bookCaseId);
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
 
         // 책 등록
         BookRegisterDto bookDto = new BookRegisterDto();

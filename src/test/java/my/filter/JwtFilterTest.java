@@ -54,9 +54,9 @@ class JwtFilterTest {
 
     private String createValidToken(Long userId, Role role) {
         UserVO user = UserVO.builder()
-                .id(userId)
                 .role(role)
                 .build();
+        user.setId(userId);
         return jwtProvider.createToken(user);
     }
 
@@ -248,9 +248,9 @@ class JwtFilterTest {
             expiredProvider.init();
 
             UserVO user = UserVO.builder()
-                    .id(1L)
                     .role(Role.BOOK_OWNER)
                     .build();
+            user.setId(1L);
             String expiredToken = expiredProvider.createToken(user);
 
             Thread.sleep(10); // 토큰 만료 대기

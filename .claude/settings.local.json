@@ -5,7 +5,17 @@
       "Bash(echo:*)",
       "Bash(tmux:*)",
       "Bash(apt list:*)",
-      "Bash(/usr/local/bin/tmux:*)"
+      "Bash(/usr/local/bin/tmux:*)",
+      "Bash(node:*)",
+      "Bash(npm --version:*)",
+      "Bash(npm install:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.tosspayments.com)",
+      "WebFetch(domain:developers.tosspayments.com)",
+      "Bash(npx tsc:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(npx vite build)",
+      "Bash(ls:*)"
     ]
   }
 }

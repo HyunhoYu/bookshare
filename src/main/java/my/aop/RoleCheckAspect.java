@@ -2,8 +2,8 @@ package my.aop;
 
 import jakarta.servlet.http.HttpServletRequest;
 import my.annotation.RequireRole;
+import my.common.exception.ApplicationException;
 import my.common.exception.ErrorCode;
-import my.common.exception.ForbiddenException;
 import my.enums.Role;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
@@ -37,7 +37,7 @@ public class RoleCheckAspect {
         }
 
         if (!hasPermission) {
-            throw new ForbiddenException(ErrorCode.FORBIDDEN);
+            throw new ApplicationException(ErrorCode.FORBIDDEN);
         }
 
         if (requireRole.checkOwnership() && Role.BOOK_OWNER.name().equals(role)) {
@@ -58,7 +58,7 @@ public class RoleCheckAspect {
         Long userId = (Long) request.getAttribute("userId");
 
         if (!userId.equals(pathId)) {
-            throw new ForbiddenException(ErrorCode.FORBIDDEN);
+            throw new ApplicationException(ErrorCode.FORBIDDEN);
         }
     }
 }

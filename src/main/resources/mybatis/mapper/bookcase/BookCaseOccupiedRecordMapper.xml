@@ -32,7 +32,6 @@
         </foreach>
     </select>
 
-
     <!-- 현재 점유 중인 레코드 조회 (un_occupied_at IS NULL) -->
     <select id="selectCurrentByBookCaseId" parameterType="long" resultMap="occupiedRecordResultMap">
         SELECT * FROM BOOK_CASE_OCCUPIED_RECORD

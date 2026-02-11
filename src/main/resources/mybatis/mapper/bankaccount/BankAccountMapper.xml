@@ -7,11 +7,12 @@
         <id property="id" column="BOOK_OWNER_ID"/>
         <result property="accountNumber" column="ACCOUNT_NUMBER"/>
         <result property="bankName" column="BANK_NAME"/>
+        <result property="bankCode" column="BANK_CODE"/>
     </resultMap>
 
     <insert id="insert" parameterType="my.domain.bankaccount.vo.BankAccountVO">
-        INSERT INTO BANK_ACCOUNT (BOOK_OWNER_ID, ACCOUNT_NUMBER, BANK_NAME)
-        VALUES (#{id}, #{accountNumber}, #{bankName})
+        INSERT INTO BANK_ACCOUNT (BOOK_OWNER_ID, ACCOUNT_NUMBER, BANK_NAME, BANK_CODE)
+        VALUES (#{id}, #{accountNumber}, #{bankName}, #{bankCode,jdbcType=VARCHAR})
     </insert>
 
     <select id="selectById" parameterType="long" resultMap="bankAccountResultMap">

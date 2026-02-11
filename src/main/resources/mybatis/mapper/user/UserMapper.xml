@@ -37,7 +37,7 @@
     </insert>
 
 
-    <update id="updateOne">
+    <update id="update">
         UPDATE USERS
         <set>
             <if test="name != null">NAME = #{name},</if>
@@ -61,6 +61,16 @@
         SET DELETED_AT = CURRENT_TIMESTAMP
         WHERE ID = #{id} AND DELETED_AT IS NULL
     </update>
+
+    <select id="selectByPhone" parameterType="String" resultMap="userResultMap">
+        SELECT * FROM USERS
+        WHERE PHONE = #{phone} AND DELETED_AT IS NULL
+    </select>
+
+    <select id="selectByResidentNumber" parameterType="String" resultMap="userResultMap">
+        SELECT * FROM USERS
+        WHERE RESIDENT_NUMBER = #{residentNumber} AND DELETED_AT IS NULL
+    </select>
 
     <select id="selectBookOwnerByNameAndPhone" resultMap="userResultMap">
         SELECT *

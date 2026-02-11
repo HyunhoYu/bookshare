@@ -29,7 +29,7 @@
 
 
 
-    <insert id="insertBook" parameterType="my.domain.book.BookVO">
+    <insert id="insert" parameterType="my.domain.book.BookVO">
         <selectKey keyProperty="id" resultType="long" order="AFTER">
             SELECT "ISEQ$$_78230".CURRVAL FROM DUAL
         </selectKey>
@@ -38,26 +38,30 @@
     </insert>
 
     <select id="selectById" parameterType="long" resultMap="bookResultMap">
+        SELECT * FROM BOOK WHERE ID = #{id} AND DELETED_AT IS NULL
+    </select>
+
+    <select id="selectByIdIncludeDeleted" parameterType="long" resultMap="bookResultMap">
         SELECT * FROM BOOK WHERE ID = #{id}
     </select>
 
     <select id="selectBooksByBookOwnerId" parameterType="long" resultMap="bookResultMap">
         SELECT *
         FROM BOOK
-        WHERE BOOK_OWNER_ID=#{id}
+        WHERE BOOK_OWNER_ID=#{id} AND DELETED_AT IS NULL
     </select>
-    
+
     <select id="selectSoldBookByBookOwnerId" parameterType="long" resultMap="bookResultMap">
         SELECT *
         FROM BOOK
-        WHERE BOOK_OWNER_ID=#{id} AND STATE='SOLD'
+        WHERE BOOK_OWNER_ID=#{id} AND STATE='SOLD' AND DELETED_AT IS NULL
     </select>
 
     <update id="updateStateSold" parameterType="long">
         UPDATE BOOK SET STATE = 'SOLD' WHERE ID = #{id} AND STATE = 'NORMAL'
     </update>
 
-    <select id="selectByBookCaseIds" parameterType="List" resultType="List">
+    <select id="selectNormalBookIdsByBookCaseIds" resultType="long">
         SELECT B.ID
         FROM BOOK B
         WHERE B.BOOK_CASE_ID IN
@@ -93,6 +97,7 @@
             #{bookId}
         </foreach>
         AND STATE = #{state}
+        AND DELETED_AT IS NULL
     </select>
 
 </mapper>

@@ -10,7 +10,7 @@
         <result property="createdAt" column="CREATED_AT"/>
     </resultMap>
 
-    <insert id="insertBookCaseType" parameterType="my.domain.bookcasetype.BookCaseTypeVO">
+    <insert id="insert" parameterType="my.domain.bookcasetype.BookCaseTypeVO">
         <selectKey keyProperty="id" resultType="long" order="AFTER">
             SELECT "ISEQ$$_78216".CURRVAL FROM DUAL
         </selectKey>
@@ -20,6 +20,10 @@
 
     <select id="selectById" resultMap="bookCaseTypeResultMap">
         SELECT * FROM BOOK_CASE_TYPE WHERE ID = #{id}
+    </select>
+
+    <select id="selectByCode" resultMap="bookCaseTypeResultMap">
+        SELECT * FROM BOOK_CASE_TYPE WHERE CODE = #{code}
     </select>
 
     <select id="selectAll" resultMap="bookCaseTypeResultMap">

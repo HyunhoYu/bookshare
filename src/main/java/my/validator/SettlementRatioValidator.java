@@ -3,16 +3,27 @@ package my.validator;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import my.annotation.ValidSettlementRatio;
+import my.domain.settlement_ratio.dto.SettlementRatioRequestDto;
 import my.domain.settlement_ratio.vo.SettlementRatioVO;
 
 import java.math.BigDecimal;
 
-public class SettlementRatioValidator implements ConstraintValidator<ValidSettlementRatio, SettlementRatioVO> {
+public class SettlementRatioValidator implements ConstraintValidator<ValidSettlementRatio, Object> {
 
     @Override
-    public boolean isValid(SettlementRatioVO settlementRatioVO, ConstraintValidatorContext context) {
-        double ownerRatio = settlementRatioVO.getOwnerRatio();
-        double storeRatio = settlementRatioVO.getStoreRatio();
+    public boolean isValid(Object value, ConstraintValidatorContext context) {
+        double ownerRatio;
+        double storeRatio;
+
+        if (value instanceof SettlementRatioVO vo) {
+            ownerRatio = vo.getOwnerRatio();
+            storeRatio = vo.getStoreRatio();
+        } else if (value instanceof SettlementRatioRequestDto dto) {
+            ownerRatio = dto.getOwnerRatio();
+            storeRatio = dto.getStoreRatio();
+        } else {
+            return false;
+        }
 
         if (exceedsDecimalPlaceLimit(ownerRatio) || exceedsDecimalPlaceLimit(storeRatio)) {
             setMessage(context, "소수점 둘째자리까지만 입력 가능합니다");

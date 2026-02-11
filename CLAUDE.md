@@ -15,7 +15,7 @@ JWT_SECRET=thisissecretkey991209bookshare1234567890
 ```
 
 ### Admin 계정
-- email: `admin@bookshare.com` / password: `test123`
+- email: `admin@bookshare.com` / password: `admin1234`
 
 ### sqlplus 접근 방법 (WSL 환경)
 ```bash
@@ -25,6 +25,7 @@ cmd.exe /c "set NLS_LANG=AMERICAN_AMERICA.AL32UTF8&& sqlplus -S system/\"Paperpl
 ```
 - **주의**: SQL 파일은 반드시 Windows 경로(`C:\Users\tit\`)에 위치해야 함. `/tmp/` 등 Linux 경로는 sqlplus에서 접근 불가
 - **주의**: sqlplus SQL 파일에 한글 주석 넣으면 인코딩 깨져서 INSERT/UPDATE 실패함. 한글 데이터는 UNISTR 사용하거나 주석은 영문으로.
+- **주의**: UNISTR도 CASE WHEN 비교 시 ORA-12704 (character set mismatch) 발생 가능. 한글 컬럼 값 비교가 필요하면 Java 레벨에서 처리 권장.
 
 ## 프로젝트 구조
 ```
@@ -33,7 +34,7 @@ src/main/java/my/
 ├── domain/           # Service(interface+impl) + Mapper + VO + DTO
 ├── annotation/       # @RequireRole, @ValidSettlementRatio
 ├── aop/              # RoleCheckAspect
-├── common/           # ApiResponse, ErrorCode, 예외 클래스들
+├── common/           # ApiResponse, ErrorCode, 예외 클래스, BankCodeResolver
 ├── enums/            # Role(ADMIN,BOOK_OWNER,CUSTOMER,EMPLOYEE), BookState
 ├── filter/           # JwtFilter
 ├── jwt/              # JwtProvider
@@ -73,13 +74,30 @@ SETTLEMENT_RATIO         → ISEQ$$_77702
 - 미정산 = BOOK_SALE_RECORD에서 BOOK_OWNER_SETTLEMENT_ID IS NULL인 레코드
 - 정산 완료 = BOOK_OWNER_SETTLEMENT에 레코드 존재 (항상 settledAt이 있음)
 
-### 정산 실행 검증 순서
+### 정산 실행 검증 순서 + 송금 흐름
 1. saleRecordIds 비어있는지
 2. 책소유주 존재 여부
 3. 계좌 정보 등록 여부
 4. saleRecordIds가 모두 해당 bookOwner 소유인지 (BOOK JOIN)
 5. 이미 정산된 기록이 아닌지
-6. BOOK_OWNER_SETTLEMENT INSERT → sale_record들의 settlement_id UPDATE
+6. 금액 계산 (sumAmountsByIds: 판매 시점 비율로 ownerAmount 산출)
+7. 토스페이먼츠 송금 (TossPaymentService.transfer())
+8. BOOK_OWNER_SETTLEMENT INSERT (금액 + payoutKey + transferStatus 포함) → sale_record들의 settlement_id UPDATE
+
+### 토스페이먼츠 연동
+- `TossPaymentService.transfer(bankCode, accountNumber, amount, holderName)` → `TossTransferResponseDto`
+- 구현체: `TossPaymentServiceImpl` (RestTemplate + Basic Auth)
+- 설정값: `toss.payments.secret-key`, `toss.payments.base-url` (application.yml / .env)
+- 송금 실패 시 `SETTLEMENT_TRANSFER_FAIL` 예외 → @Transactional 롤백
+- `BankCodeResolver`: 은행명 → 2자리 코드 변환 유틸리티 (bankCode가 null일 때 폴백)
+- bankName은 BankCodeResolver에 등록된 한글 은행명만 유효 (국민은행, 신한은행, 하나은행 등). 미등록 은행명이면 `BANK_CODE_NOT_FOUND` 예외 발생
+
+#### 토스 지급대행 API 현황 (MVP 단계)
+- **현재**: `TossPaymentServiceImpl`은 `/v1/payouts` 호출하는 단순 구현. 실제 토스 지급대행은 V2 API(`/v2/payouts`)로 별도 계약 + JWE 암호화 + 셀러 등록이 필요하여 현재 사용 불가
+- **테스트**: `TestTossPaymentService`(@Primary)가 Mock 응답 반환 → JUnit은 항상 Mock 사용
+- **MVP 전략**: 정산 실행 시 금액 계산/검증/DB 기록까지만 처리하고, 실제 송금은 관리자가 수동 이체. 사업 확장 시 토스 지급대행 계약(사업자등록 + 연 11만원) 후 실제 구현체 교체
+- **토스 지급대행 실제 연동 시 필요사항**: V2 API 엔드포인트, 보안 키(64자 hex)로 JWE 암호화, `TossPayments-api-security-mode: ENCRYPTION` 헤더, 셀러 등록 → 잔액 확인 → 지급 요청 3단계 흐름
+- **.env에 `TOSS_SECRET_KEY` 설정 완료** (test_sk_ 테스트 키). 단, 지급대행 계약 없이는 401 반환됨
 
 ### 조건부 Unique Index 패턴
 Oracle의 "NULL은 인덱스에서 제외" 특성을 이용한 패턴:
@@ -91,6 +109,7 @@ CREATE UNIQUE INDEX 인덱스명 ON 테이블 (
 적용 현황:
 - USERS.EMAIL: DELETED_AT IS NULL인 행만 UNIQUE (소프트 삭제된 이메일 재사용 가능)
 - BOOK_CASE_OCCUPIED_RECORD: UN_OCCUPIED_AT IS NULL인 행만 BOOK_CASE_ID UNIQUE (책장당 활성 점유 1건 제한)
+- BOOK_CASE_TYPE.CODE: UNIQUE 제약조건 (UQ_BOOK_CASE_TYPE_CODE) — 동일 코드 중복 생성 불가
 
 ### 소프트 삭제
 - USERS 테이블의 DELETED_AT 컬럼 사용 (NULL이면 활성)
@@ -105,20 +124,32 @@ SHOULD_BE_RETRIEVED → soft delete (회수 시, DELETED_AT = SYSTIMESTAMP)
 
 ## 개발 진행 상황
 
-### Phase 1~3: 구현 완료
-순서 1~7 (정산비율 설정, 책장 타입/등록, BookOwner 등록, 점유, 책 등록, 판매)
+### 기능 구현: 전부 완료
+- Phase 1~3: 정산비율 설정, 책장 타입/등록, BookOwner 등록, 점유, 책 등록, 판매
+- Phase 4: 미정산 조회, 정산 실행
+- Phase 5: 책장 임대 종료, 회수 대기 목록, 책 회수
+- Phase 6: 조회 API
+- Phase 7: 토스페이먼츠 송금 연동 (settle() 시 실제 송금)
 
-### Phase 4: 진행 중
-- 순서 8: GET /settlements/pending (Admin 전체 미정산) - 구현 완료
-- 순서 9: GET /book-owners/{id}/settlements/pending (BookOwner별 미정산) - 구현 완료
-- 순서 10: POST /settlements (정산 실행) - 코드 작성 완료, 테스트 검증 중
+### 코드 품질 개선: 완료
+- DTO 유효성 검증 (@Valid + Jakarta Validation 어노테이션)
+- 권한 체크 (@RequireRole) 전 컨트롤러 적용
+- soft delete 조건 (DELETED_AT IS NULL) 쿼리 보완
+- @Transactional 쓰기 메서드 전체 적용
+- GlobalExceptionHandler: DataIntegrityViolationException 처리 추가
+- 중복 검증 (email, phone, residentNumber) UserAuthServiceImpl.save()에 중앙화
 
-### Phase 5: 미구현
-- 순서 11~14 (책장 임대 종료, 회수 대기 목록, 책 회수)
+## 테스트 실행 방법
+WSL 환경에서 Windows의 Maven을 통해 테스트 실행:
+```bash
+cd "/mnt/c/Users/tit/OneDrive/바탕 화면/bookshare" && cmd.exe /c "C:\Users\tit\run_test.cmd" 2>&1 | tail -10
+```
+- `run_test.cmd`는 `C:\Users\tit\` 에 위치
+- 결과 마지막 10줄만 보면 `Tests run: 140, Failures: 0` 형태로 요약됨
+- 실패 시 `| tail -10` 대신 `| grep -E "Tests run:|FAIL|ERROR.*Test" | head -30` 으로 실패 테스트 확인
+- 현재 전체 테스트 수: **140개**
 
-### Phase 6: 조회 API 전부 구현 완료
-
-## 테스트 작성 패턴~~~~
+## 테스트 작성 패턴
 ```java
 @SpringBootTest
 @Transactional  // 테스트 후 자동 롤백
@@ -129,8 +160,18 @@ class XxxTest {
     // AssertJ 사용 (assertThat, assertThatThrownBy)
 }
 ```
-- 테스트 데이터 생성: 정산비율 설정 → 책장타입 → 책장 → BookOwner(계좌포함) → 점유 → 책등록 → 판매 순서 필수
-- 테스트 위치: src/test/java/my/domain/{도메인}/
+- 테스트 데이터 생성 순서: 정산비율 설정 → 책장타입 → 책장 → BookOwner(계좌포함) → 점유 → 책등록 → 판매
+- 테스트 위치: `src/test/java/my/domain/{도메인}/`
+- **중복 방지 필수**: phone, email, residentNumber, BookCaseType code는 반드시 `uniqueCode()` 기반 유니크 값 사용 (중복 검증 로직 때문)
+- **bankName**: 테스트에서 bankName은 `"국민은행"` 등 BankCodeResolver에 등록된 유효한 한글 은행명 사용 (`"KB"` 등 약어 사용 금지)
+- soft delete 검증 시: `bookMapper.selectByIdIncludeDeleted(id)` 사용 (selectById는 DELETED_AT IS NULL 조건 포함)
+
+## DTO / VO 패턴 규칙
+- **VO**: DB 매핑 객체 (MyBatis resultMap). API 응답으로도 사용
+- **DTO**: API 요청 전용. 유효성 검증 어노테이션은 DTO에만 부여
+- **Controller**: 요청은 DTO로 받고, 서비스에 전달. 응답은 VO 반환
+- **민감 필드**: UserVO의 `password`, `residentNumber`에 `@JsonIgnore` 적용 (API 응답에서 제외)
+- VO를 `@RequestBody`로 직접 받지 않는다 (반드시 DTO 사용)
 
 ## 주요 참고 문서
 - `BOOKSHARE_개발순서_및_서비스플로우.md` - 서비스 플로우 및 체크 로직

@@ -1,7 +1,7 @@
 package my.domain.bookcase;
 
 import my.domain.bookcase.service.BookCaseService;
-import my.domain.bookcasetype.BookCaseTypeVO;
+import my.domain.bookcasetype.BookCaseTypeCreateDto;
 import my.domain.bookcasetype.service.BookCaseTypeService;
 import my.domain.bookowner.dto.request.BookOwnerJoinRequestDto;
 import my.domain.bookowner.service.auth.BookOwnerAuthService;
@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,27 +37,33 @@ class BookCaseOccupiedRecordMapperTest {
     private long bookCaseId;
     private long bookOwnerId;
 
+    private String uniqueCode() {
+        return UUID.randomUUID().toString().substring(0, 8);
+    }
+
     @BeforeEach
     void setUp() {
+        String code = uniqueCode();
+
         // 책장 타입 생성
-        BookCaseTypeVO typeVO = new BookCaseTypeVO();
-        typeVO.setCode("T1");
-        typeVO.setMonthlyPrice(30000);
-        long typeId = bookCaseTypeService.addBookCaseType(typeVO);
+        BookCaseTypeCreateDto typeDto = new BookCaseTypeCreateDto();
+        typeDto.setCode(code);
+        typeDto.setMonthlyPrice(30000);
+        long typeId = bookCaseTypeService.create(typeDto);
 
         // 책장 생성
-        BookCaseVO caseVO = new BookCaseVO();
-        caseVO.setLocationCode("OCC-TEST-01");
-        caseVO.setBookCaseTypeId(typeId);
-        bookCaseId = bookCaseService.addBookCase(caseVO);
+        BookCaseCreateDto caseDto = new BookCaseCreateDto();
+        caseDto.setLocationName("1층 A구역");
+        caseDto.setBookCaseTypeId(typeId);
+        bookCaseId = bookCaseService.create(caseDto);
 
         // BookOwner 생성
         BookOwnerJoinRequestDto dto = BookOwnerJoinRequestDto.builder()
-                .name("점유테스트")
-                .email("occupy-test@test.com")
-                .phone("010-9999-8888")
+                .name("점유테스트" + code)
+                .email("occupy-" + code + "@test.com")
+                .phone("010-" + code.substring(0, 4) + "-" + code.substring(4))
                 .password("test1234")
-                .residentNumber("880101-1234567")
+                .residentNumber(code + "-1234567")
                 .bankName("신한은행")
                 .accountNumber("111-222-333")
                 .build();
@@ -122,15 +129,15 @@ class BookCaseOccupiedRecordMapperTest {
     @DisplayName("BookOwner별 점유 이력 조회 - 최신순 정렬")
     void selectByBookOwnerId_returnsHistory() {
         // 책장 2개에 점유 기록 생성
-        BookCaseTypeVO typeVO2 = new BookCaseTypeVO();
-        typeVO2.setCode("T2");
-        typeVO2.setMonthlyPrice(40000);
-        long typeId2 = bookCaseTypeService.addBookCaseType(typeVO2);
+        BookCaseTypeCreateDto typeDto2 = new BookCaseTypeCreateDto();
+        typeDto2.setCode(uniqueCode());
+        typeDto2.setMonthlyPrice(40000);
+        long typeId2 = bookCaseTypeService.create(typeDto2);
 
-        BookCaseVO case2 = new BookCaseVO();
-        case2.setLocationCode("OCC-TEST-02");
-        case2.setBookCaseTypeId(typeId2);
-        long bookCaseId2 = bookCaseService.addBookCase(case2);
+        BookCaseCreateDto case2Dto = new BookCaseCreateDto();
+        case2Dto.setLocationName("1층 B구역");
+        case2Dto.setBookCaseTypeId(typeId2);
+        long bookCaseId2 = bookCaseService.create(case2Dto);
 
         BookCaseOccupiedRecordVO r1 = new BookCaseOccupiedRecordVO();
         r1.setBookCaseId(bookCaseId);
@@ -161,13 +168,14 @@ class BookCaseOccupiedRecordMapperTest {
         occupiedRecordMapper.updateUnOccupiedAt(r1.getId());
 
         // 3. 다른 사람이 재점유
+        String code2 = uniqueCode();
         BookOwnerVO owner2 = bookOwnerAuthService.signup(
                 BookOwnerJoinRequestDto.builder()
-                        .name("재점유자")
-                        .email("reoccupy@test.com")
-                        .phone("010-1111-2222")
+                        .name("재점유자" + code2)
+                        .email("reoccupy-" + code2 + "@test.com")
+                        .phone("010-" + code2.substring(0, 4) + "-" + code2.substring(4))
                         .password("pass1234")
-                        .residentNumber("950202-2345678")
+                        .residentNumber(code2 + "-2345678")
                         .bankName("우리은행")
                         .accountNumber("444-555-666")
                         .build()

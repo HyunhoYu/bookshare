@@ -1,20 +1,31 @@
 package my.domain.settlement.service;
 
+import static my.common.util.EntityUtil.requireNonNull;
+
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import my.common.exception.ApplicationException;
 import my.common.exception.ErrorCode;
+import my.common.util.BankCodeResolver;
 import my.domain.bankaccount.BankAccountMapper;
+import my.domain.bankaccount.vo.BankAccountVO;
 import my.domain.bookowner.BookOwnerMapper;
+import my.domain.bookowner.vo.BookOwnerVO;
 import my.domain.booksoldrecord.BookSoldRecordMapper;
 import my.domain.booksoldrecord.vo.BookSoldRecordVO;
+import my.domain.payment.TossPaymentService;
+import my.domain.payment.dto.TossTransferResponseDto;
 import my.domain.settlement.SettlementMapper;
 import my.domain.settlement.dto.SettlementRequestDto;
 import my.domain.settlement.vo.SettlementVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SettlementServiceImpl implements SettlementService{
@@ -23,6 +34,7 @@ public class SettlementServiceImpl implements SettlementService{
     private final BookSoldRecordMapper bookSoldRecordMapper;
     private final BookOwnerMapper bookOwnerMapper;
     private final BankAccountMapper bankAccountMapper;
+    private final TossPaymentService tossPaymentService;
 
     @Override
     public List<SettlementVO> findAll(Long bookOwnerId) {
@@ -56,7 +68,36 @@ public class SettlementServiceImpl implements SettlementService{
         validateAllRecordsOwnedBy(saleRecordIds, bookOwnerId);
         validateNotAlreadySettled(saleRecordIds);
 
-        SettlementVO settlementVO = createSettlement(bookOwnerId);
+        Map<String, Object> amountMap = bookSoldRecordMapper.sumAmountsByIds(saleRecordIds);
+        int totalAmount = ((BigDecimal) amountMap.get("totalAmount")).intValue();
+        int ownerAmount = ((BigDecimal) amountMap.get("ownerAmount")).intValue();
+        int storeAmount = totalAmount - ownerAmount;
+
+        if (totalAmount == 0) {
+            throw new ApplicationException(ErrorCode.SETTLEMENT_AMOUNT_ZERO);
+        }
+
+        BankAccountVO bankAccount = bankAccountMapper.selectById(bookOwnerId);
+        String bankCode = bankAccount.getBankCode();
+        if (bankCode == null) {
+            bankCode = BankCodeResolver.resolve(bankAccount.getBankName());
+        }
+        if (bankCode == null) {
+            throw new ApplicationException(ErrorCode.BANK_CODE_NOT_FOUND);
+        }
+
+        BookOwnerVO bookOwner = bookOwnerMapper.selectById(bookOwnerId);
+        String holderName = bookOwner.getName();
+
+        TossTransferResponseDto transferResponse = tossPaymentService.transfer(
+                bankCode, bankAccount.getAccountNumber(), ownerAmount, holderName
+        );
+
+        log.info("Settlement transfer completed - payoutKey: {}, bookOwnerId: {}, ownerAmount: {}",
+                transferResponse.getPayoutKey(), bookOwnerId, ownerAmount);
+
+        SettlementVO settlementVO = createSettlement(bookOwnerId, totalAmount, ownerAmount, storeAmount,
+                transferResponse.getPayoutKey(), transferResponse.getStatus());
         bookSoldRecordMapper.updateSettlementId(settlementVO.getId(), saleRecordIds);
 
         return settlementVO;
@@ -69,15 +110,11 @@ public class SettlementServiceImpl implements SettlementService{
     }
 
     private void validateBookOwnerExists(Long bookOwnerId) {
-        if (bookOwnerMapper.selectById(bookOwnerId) == null) {
-            throw new ApplicationException(ErrorCode.BOOK_OWNER_NOT_FOUND);
-        }
+        requireNonNull(bookOwnerMapper.selectById(bookOwnerId), ErrorCode.BOOK_OWNER_NOT_FOUND);
     }
 
     private void validateBankAccountExists(Long bookOwnerId) {
-        if (bankAccountMapper.selectById(bookOwnerId) == null) {
-            throw new ApplicationException(ErrorCode.BOOK_OWNER_BANK_ACCOUNT_NOT_FOUND);
-        }
+        requireNonNull(bankAccountMapper.selectById(bookOwnerId), ErrorCode.BOOK_OWNER_BANK_ACCOUNT_NOT_FOUND);
     }
 
     private void validateAllRecordsOwnedBy(List<Long> saleRecordIds, Long bookOwnerId) {
@@ -94,9 +131,15 @@ public class SettlementServiceImpl implements SettlementService{
         }
     }
 
-    private SettlementVO createSettlement(Long bookOwnerId) {
+    private SettlementVO createSettlement(Long bookOwnerId, int totalAmount, int ownerAmount,
+                                          int storeAmount, String payoutKey, String transferStatus) {
         SettlementVO settlementVO = new SettlementVO();
         settlementVO.setBookOwnerId(bookOwnerId);
+        settlementVO.setTotalAmount(totalAmount);
+        settlementVO.setOwnerAmount(ownerAmount);
+        settlementVO.setStoreAmount(storeAmount);
+        settlementVO.setPayoutKey(payoutKey);
+        settlementVO.setTransferStatus(transferStatus);
 
         int insertResult = settlementMapper.insert(settlementVO);
         if (insertResult != 1) {

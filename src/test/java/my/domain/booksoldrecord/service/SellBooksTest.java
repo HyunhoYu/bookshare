@@ -1,13 +1,13 @@
 package my.domain.booksoldrecord.service;
 
 import my.common.exception.ApplicationException;
-import my.common.exception.BookNotFoundException;
 import my.domain.book.BookMapper;
 import my.domain.book.BookVO;
 import my.domain.bookcase.BookRegisterDto;
+import my.domain.bookcase.BookCaseCreateDto;
 import my.domain.bookcase.BookCaseVO;
 import my.domain.bookcase.service.BookCaseService;
-import my.domain.bookcasetype.BookCaseTypeVO;
+import my.domain.bookcasetype.BookCaseTypeCreateDto;
 import my.domain.bookcasetype.service.BookCaseTypeService;
 import my.domain.bookowner.dto.request.BookOwnerJoinRequestDto;
 import my.domain.bookowner.service.auth.BookOwnerAuthService;
@@ -71,36 +71,39 @@ class SellBooksTest {
         SettlementRatioVO ratioVO = new SettlementRatioVO();
         ratioVO.setOwnerRatio(0.7);
         ratioVO.setStoreRatio(0.3);
-        ratioId = settlementRatioService.setRatio(ratioVO);
+        ratioId = settlementRatioService.create(ratioVO);
 
         // 책장 타입 생성
-        BookCaseTypeVO typeVO = new BookCaseTypeVO();
-        typeVO.setCode(uniqueCode());
-        typeVO.setMonthlyPrice(50000);
-        long typeId = bookCaseTypeService.addBookCaseType(typeVO);
+        BookCaseTypeCreateDto typeDto = new BookCaseTypeCreateDto();
+        typeDto.setCode(uniqueCode());
+        typeDto.setMonthlyPrice(50000);
+        long typeId = bookCaseTypeService.create(typeDto);
 
         // 책장 생성
-        BookCaseVO caseVO = new BookCaseVO();
-        caseVO.setLocationCode("TEST-" + uniqueCode());
-        caseVO.setBookCaseTypeId(typeId);
-        long bookCaseId = bookCaseService.addBookCase(caseVO);
+        BookCaseCreateDto caseDto = new BookCaseCreateDto();
+        caseDto.setLocationName("1층 A구역");
+        caseDto.setBookCaseTypeId(typeId);
+        long bookCaseId = bookCaseService.create(caseDto);
 
         // BookOwner 생성 + 책장 점유
+        String ownerCode = uniqueCode();
+        String ownerName = "홍길동" + ownerCode;
+        String ownerPhone = "010-" + ownerCode.substring(0, 4) + "-" + ownerCode.substring(4);
         BookOwnerVO owner = bookOwnerAuthService.signup(BookOwnerJoinRequestDto.builder()
-                .name("홍길동")
-                .email("sell-" + uniqueCode() + "@test.com")
-                .phone("010-1111-2222")
+                .name(ownerName)
+                .email("sell-" + ownerCode + "@test.com")
+                .phone(ownerPhone)
                 .password("password123")
-                .residentNumber("990101-1234567")
+                .residentNumber(ownerCode + "-1234567")
                 .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), bookCaseId);
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
 
         // 책 등록
         BookRegisterDto bookDto = new BookRegisterDto();
-        bookDto.setUserName("홍길동");
-        bookDto.setUserPhone("010-1111-2222");
+        bookDto.setUserName(ownerName);
+        bookDto.setUserPhone(ownerPhone);
         bookDto.setBookName("이펙티브 자바");
         bookDto.setPublisherHouse("인사이트");
         bookDto.setPrice(36000);
@@ -110,12 +113,13 @@ class SellBooksTest {
         bookId = books.get(0).getId();
 
         // 고객 생성
+        String custCode = uniqueCode();
         UserVO customer = customerAuthService.signup(UserJoinRequestDto.builder()
                 .name("김고객")
-                .email("cust-" + uniqueCode() + "@test.com")
-                .phone("010-9999-8888")
+                .email("cust-" + custCode + "@test.com")
+                .phone("010-" + custCode.substring(0, 4) + "-" + custCode.substring(4))
                 .password("password123")
-                .residentNumber("950505-2345678")
+                .residentNumber(custCode + "-2345678")
                 .build());
         customerId = customer.getId();
     }
@@ -175,7 +179,7 @@ class SellBooksTest {
         );
 
         assertThatThrownBy(() -> bookSoldRecordService.sellBooks(dtos))
-                .isInstanceOf(BookNotFoundException.class);
+                .isInstanceOf(ApplicationException.class);
     }
 
     @Test

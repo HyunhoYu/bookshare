@@ -22,7 +22,7 @@ public class BookOwnerServiceImpl implements BookOwnerService{
     private final SettlementService settlementService;
 
     @Override
-    public BookOwnerVO findOne(Long id) {
+    public BookOwnerVO findById(Long id) {
         return bookOwnerMapper.selectOne(id);
     }
 

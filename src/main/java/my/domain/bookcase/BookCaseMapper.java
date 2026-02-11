@@ -7,7 +7,7 @@ import java.util.List;
 @Mapper
 public interface BookCaseMapper {
 
-    int insertBookCase(BookCaseVO bookCaseVO);
+    int insert(BookCaseVO bookCaseVO);
     BookCaseVO selectById(long id);
     List<BookCaseVO> selectAll();
     List<BookCaseVO> selectUsableBookCases();

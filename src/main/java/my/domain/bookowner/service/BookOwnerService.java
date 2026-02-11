@@ -10,7 +10,7 @@ import java.util.List;
 public interface BookOwnerService {
 
     List<BookOwnerVO> findAll();
-    BookOwnerVO findOne(Long bookOwnerId);
+    BookOwnerVO findById(Long bookOwnerId);
     List<BookVO> findMyBooks(Long bookOwnerId);
     List<BookVO> findMySoldBooks(Long bookOwnerId);
     List<SettlementVO> findAllMySettlements(Long bookOwnerId);

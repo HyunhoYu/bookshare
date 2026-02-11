@@ -1,8 +1,10 @@
 package my.domain.bookowner.service.auth;
 
 import lombok.RequiredArgsConstructor;
-import my.common.exception.DuplicateEmailException;
+import my.common.exception.ApplicationException;
 import my.common.exception.ErrorCode;
+import my.domain.address.AddressMapper;
+import my.domain.address.vo.AddressVO;
 import my.domain.bankaccount.service.auth.BankAccountAuthService;
 import my.domain.bankaccount.vo.BankAccountVO;
 import my.domain.bookowner.BookOwnerMapper;
@@ -23,6 +25,7 @@ public class BookOwnerAuthServiceImpl implements BookOwnerAuthService {
     private final BankAccountAuthService bankAccountAuthService;
     private final BookOwnerMapper bookOwnerMapper;
     private final PasswordEncoder passwordEncoder;
+    private final AddressMapper addressMapper;
 
     @Override
     public int save(BookOwnerVO bookOwnerVO) {
@@ -32,10 +35,6 @@ public class BookOwnerAuthServiceImpl implements BookOwnerAuthService {
     @Override
     @Transactional
     public BookOwnerVO signup(BookOwnerJoinRequestDto dto) {
-
-        if (userAuthService.findByEmail(dto.getEmail()) != null) {
-            throw new DuplicateEmailException(ErrorCode.DUPLICATE_EMAIL);
-        }
 
         UserVO userVO = UserVO.builder()
                 .role(Role.BOOK_OWNER)
@@ -48,9 +47,25 @@ public class BookOwnerAuthServiceImpl implements BookOwnerAuthService {
         userAuthService.save(userVO);
         Long userId = userVO.getId();
 
+        AddressVO addressVO = new AddressVO();
+
+        addressVO.setUserId(userId);
+        addressVO.setCity(dto.getCity());
+        addressVO.setLoadAddr(dto.getLoadAddr());
+        addressVO.setSpecificAddr(dto.getSpecificAddr());
+
+        int result = addressMapper.insert(addressVO);
+
+        if (result != 1) {
+            throw new ApplicationException(ErrorCode.ADDRESS_INSERT_FAIL);
+        }
+
         BookOwnerVO bookOwnerVO = new BookOwnerVO();
         bookOwnerVO.setId(userId);
         bookOwnerVO.setRole(Role.BOOK_OWNER);
+        bookOwnerVO.setName(dto.getName());
+        bookOwnerVO.setPhone(dto.getPhone());
+        bookOwnerVO.setEmail(dto.getEmail());
         bookOwnerMapper.insert(bookOwnerVO);
 
         BankAccountVO bankAccountVO = new BankAccountVO();

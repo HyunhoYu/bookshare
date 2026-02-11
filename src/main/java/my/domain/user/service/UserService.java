@@ -9,7 +9,7 @@ public interface UserService {
 
     List<UserVO> findAll();
     UserVO findById(Long id);
-    UserVO updateOne(UserUpdateDto dto, Long id);
-    void deleteOne(Long id);
+    UserVO update(Long id, UserUpdateDto dto);
+    void delete(Long id);
 
 }

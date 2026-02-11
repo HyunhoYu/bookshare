@@ -3,9 +3,10 @@ package my.domain.settlement.service;
 import my.domain.book.BookMapper;
 import my.domain.book.BookVO;
 import my.domain.bookcase.BookRegisterDto;
+import my.domain.bookcase.BookCaseCreateDto;
 import my.domain.bookcase.BookCaseVO;
 import my.domain.bookcase.service.BookCaseService;
-import my.domain.bookcasetype.BookCaseTypeVO;
+import my.domain.bookcasetype.BookCaseTypeCreateDto;
 import my.domain.bookcasetype.service.BookCaseTypeService;
 import my.domain.bookowner.dto.request.BookOwnerJoinRequestDto;
 import my.domain.bookowner.service.BookOwnerService;
@@ -57,14 +58,15 @@ class FindUnsettledByBookOwnerTest {
         SettlementRatioVO ratioVO = new SettlementRatioVO();
         ratioVO.setOwnerRatio(0.7);
         ratioVO.setStoreRatio(0.3);
-        settlementRatioService.setRatio(ratioVO);
+        settlementRatioService.create(ratioVO);
 
+        String custCode = uniqueCode();
         UserVO customer = customerAuthService.signup(UserJoinRequestDto.builder()
                 .name("testcust")
-                .email("unsettled-bo-" + uniqueCode() + "@test.com")
-                .phone("010-9999-8888")
+                .email("unsettled-bo-" + custCode + "@test.com")
+                .phone("010-" + custCode.substring(0, 4) + "-" + custCode.substring(4))
                 .password("password123")
-                .residentNumber("950505-2345678")
+                .residentNumber(custCode + "-2345678")
                 .build());
         customerId = customer.getId();
     }
@@ -74,26 +76,26 @@ class FindUnsettledByBookOwnerTest {
         String ownerName = "owner" + code;
         String ownerPhone = "010-" + code.substring(0, 4) + "-" + code.substring(4);
 
-        BookCaseTypeVO typeVO = new BookCaseTypeVO();
-        typeVO.setCode(code);
-        typeVO.setMonthlyPrice(50000);
-        long typeId = bookCaseTypeService.addBookCaseType(typeVO);
+        BookCaseTypeCreateDto typeDto = new BookCaseTypeCreateDto();
+        typeDto.setCode(code);
+        typeDto.setMonthlyPrice(50000);
+        long typeId = bookCaseTypeService.create(typeDto);
 
-        BookCaseVO caseVO = new BookCaseVO();
-        caseVO.setLocationCode("LOC-" + code);
-        caseVO.setBookCaseTypeId(typeId);
-        long bookCaseId = bookCaseService.addBookCase(caseVO);
+        BookCaseCreateDto caseDto = new BookCaseCreateDto();
+        caseDto.setLocationName("1층 A구역");
+        caseDto.setBookCaseTypeId(typeId);
+        long bookCaseId = bookCaseService.create(caseDto);
 
         BookOwnerVO owner = bookOwnerAuthService.signup(BookOwnerJoinRequestDto.builder()
                 .name(ownerName)
                 .email(prefix + "-" + code + "@test.com")
                 .phone(ownerPhone)
                 .password("password123")
-                .residentNumber("990101-1234567")
-                .bankName("KB")
+                .residentNumber(code + "-1234567")
+                .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), bookCaseId);
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
 
         return owner;
     }
@@ -151,26 +153,26 @@ class FindUnsettledByBookOwnerTest {
         String ownerName = "owner" + code;
         String ownerPhone = "010-" + code.substring(0, 4) + "-" + code.substring(4);
 
-        BookCaseTypeVO typeVO = new BookCaseTypeVO();
-        typeVO.setCode(code);
-        typeVO.setMonthlyPrice(50000);
-        long typeId = bookCaseTypeService.addBookCaseType(typeVO);
+        BookCaseTypeCreateDto typeDto = new BookCaseTypeCreateDto();
+        typeDto.setCode(code);
+        typeDto.setMonthlyPrice(50000);
+        long typeId = bookCaseTypeService.create(typeDto);
 
-        BookCaseVO caseVO = new BookCaseVO();
-        caseVO.setLocationCode("LOC-" + code);
-        caseVO.setBookCaseTypeId(typeId);
-        long bookCaseId = bookCaseService.addBookCase(caseVO);
+        BookCaseCreateDto caseDto = new BookCaseCreateDto();
+        caseDto.setLocationName("1층 A구역");
+        caseDto.setBookCaseTypeId(typeId);
+        long bookCaseId = bookCaseService.create(caseDto);
 
         BookOwnerVO owner = bookOwnerAuthService.signup(BookOwnerJoinRequestDto.builder()
                 .name(ownerName)
                 .email(prefix + "-" + code + "@test.com")
                 .phone(ownerPhone)
                 .password("password123")
-                .residentNumber("990101-1234567")
-                .bankName("KB")
+                .residentNumber(code + "-1234567")
+                .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), bookCaseId);
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
 
         BookRegisterDto bookDto = new BookRegisterDto();
         bookDto.setUserName(ownerName);
@@ -201,26 +203,26 @@ class FindUnsettledByBookOwnerTest {
         String ownerName = "owner" + code;
         String ownerPhone = "010-" + code.substring(0, 4) + "-" + code.substring(4);
 
-        BookCaseTypeVO typeVO = new BookCaseTypeVO();
-        typeVO.setCode(code);
-        typeVO.setMonthlyPrice(50000);
-        long typeId = bookCaseTypeService.addBookCaseType(typeVO);
+        BookCaseTypeCreateDto typeDto = new BookCaseTypeCreateDto();
+        typeDto.setCode(code);
+        typeDto.setMonthlyPrice(50000);
+        long typeId = bookCaseTypeService.create(typeDto);
 
-        BookCaseVO caseVO = new BookCaseVO();
-        caseVO.setLocationCode("LOC-" + code);
-        caseVO.setBookCaseTypeId(typeId);
-        long bookCaseId = bookCaseService.addBookCase(caseVO);
+        BookCaseCreateDto caseDto = new BookCaseCreateDto();
+        caseDto.setLocationName("1층 A구역");
+        caseDto.setBookCaseTypeId(typeId);
+        long bookCaseId = bookCaseService.create(caseDto);
 
         BookOwnerVO owner = bookOwnerAuthService.signup(BookOwnerJoinRequestDto.builder()
                 .name(ownerName)
                 .email(prefix + "-" + code + "@test.com")
                 .phone(ownerPhone)
                 .password("password123")
-                .residentNumber("990101-1234567")
-                .bankName("KB")
+                .residentNumber(code + "-1234567")
+                .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), bookCaseId);
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
 
         List<Long> soldBookIds = new java.util.ArrayList<>();
         for (int i = 0; i < bookNames.size(); i++) {

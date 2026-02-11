@@ -5,16 +5,16 @@
 
     <resultMap id="bookCaseResultMap" type="my.domain.bookcase.BookCaseVO">
         <id property="id" column="ID"/>
-        <result property="locationCode" column="LOCATION_CODE"/>
+        <result property="commonCodeId" column="COMMON_CODE_ID"/>
         <result property="bookCaseTypeId" column="BOOK_CASE_TYPE_ID"/>
     </resultMap>
 
-    <insert id="insertBookCase" parameterType="my.domain.bookcase.BookCaseVO">
+    <insert id="insert" parameterType="my.domain.bookcase.BookCaseVO">
         <selectKey keyProperty="id" resultType="long" order="AFTER">
             SELECT "ISEQ$$_78225".CURRVAL FROM DUAL
         </selectKey>
-        INSERT INTO BOOK_CASE (LOCATION_CODE, BOOK_CASE_TYPE_ID)
-        VALUES (#{locationCode}, #{bookCaseTypeId})
+        INSERT INTO BOOK_CASE (COMMON_CODE_ID, BOOK_CASE_TYPE_ID)
+        VALUES (#{commonCodeId}, #{bookCaseTypeId})
     </insert>
 
     <select id="selectById" parameterType="long" resultMap="bookCaseResultMap">
@@ -41,14 +41,6 @@
         JOIN BOOK_CASE_OCCUPIED_RECORD OC ON BC.ID = OC.BOOK_CASE_ID
         WHERE OC.BOOK_OWNER_ID = #{bookOwnerId}
         AND OC.UN_OCCUPIED_AT IS NULL
-    </select>
-
-    <select id="selectBookShouldBeChangedIds" parameterType="List" resultType="List">
-
-        FROM BOOK_CASE BC
-        JOIN BOOK_CASE_OCCUPIED_RECORD BCOR
-        ON BC.ID = BCOR.BOOK_CASE_ID
-
     </select>
 
 

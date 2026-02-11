@@ -28,28 +28,28 @@ public class UserController {
 
     @RequireRole(Role.ADMIN)
     @GetMapping("/{id}")
-    public ApiResponse<UserVO> findOne(@PathVariable Long id) {
+    public ApiResponse<UserVO> findById(@PathVariable Long id) {
 
         UserVO user = userService.findById(id);
 
         if (user == null) {
-            return ApiResponse.badRequest("존재하지 않는 유저");
+            return ApiResponse.notFound("존재하지 않는 유저");
         }
         return ApiResponse.success(user);
     }
 
     @RequireRole(Role.ADMIN)
     @PutMapping("/{id}")
-    public ApiResponse<UserVO> updateOne(@RequestBody UserUpdateDto userUpdateDto, @PathVariable Long id) {
-        UserVO user = userService.updateOne(userUpdateDto, id);
+    public ApiResponse<UserVO> update(@PathVariable Long id, @RequestBody UserUpdateDto userUpdateDto) {
+        UserVO user = userService.update(id, userUpdateDto);
 
         return ApiResponse.success("수정 완료", user);
     }
 
     @RequireRole(Role.ADMIN)
     @DeleteMapping("/{id}")
-    public ApiResponse<?> deleteOne(@PathVariable Long id) {
-        userService.deleteOne(id);
+    public ApiResponse<?> delete(@PathVariable Long id) {
+        userService.delete(id);
 
         return ApiResponse.success("success", null);
     }

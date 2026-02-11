@@ -1,10 +1,11 @@
 package my.domain.settlement_ratio.service;
 import lombok.RequiredArgsConstructor;
+import my.common.exception.ApplicationException;
 import my.common.exception.ErrorCode;
-import my.common.exception.SettlementInsertFailException;
 import my.domain.settlement_ratio.SettlementRatioMapper;
 import my.domain.settlement_ratio.vo.SettlementRatioVO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,21 +19,22 @@ public class SettlementRatioServiceImpl implements SettlementRatioService {
 
 
     @Override
-    public long setRatio(SettlementRatioVO settlementRatioVO) {
+    @Transactional
+    public long create(SettlementRatioVO settlementRatioVO) {
 
-        int result = settlementRatioMapper.insertNewRatio(settlementRatioVO);
-        if (result != 1) throw new SettlementInsertFailException(ErrorCode.SETTLEMENT_RATIO_INSERT_FAIL);
+        int result = settlementRatioMapper.insert(settlementRatioVO);
+        if (result != 1) throw new ApplicationException(ErrorCode.SETTLEMENT_RATIO_INSERT_FAIL);
 
         return settlementRatioVO.getId();
     }
 
     @Override
-    public SettlementRatioVO getRatio() {
-        return settlementRatioMapper.selectCurrentRatio();
+    public SettlementRatioVO findCurrentRatio() {
+        return settlementRatioMapper.selectCurrent();
     }
 
     @Override
-    public List<SettlementRatioVO> getRatioHistory() {
-        return settlementRatioMapper.selectAllRatios();
+    public List<SettlementRatioVO> findAll() {
+        return settlementRatioMapper.selectAll();
     }
 }

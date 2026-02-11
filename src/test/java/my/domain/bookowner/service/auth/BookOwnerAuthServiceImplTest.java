@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -33,13 +35,18 @@ class BookOwnerAuthServiceImplTest {
     @Autowired
     private BankAccountMapper bankAccountMapper;
 
+    private String uniqueCode() {
+        return UUID.randomUUID().toString().substring(0, 8);
+    }
+
     private BookOwnerJoinRequestDto createDefaultDto() {
+        String code = uniqueCode();
         return BookOwnerJoinRequestDto.builder()
                 .name("홍길동")
-                .phone("010-1234-5678")
-                .email("newowner@test.com")
+                .phone("010-" + code.substring(0, 4) + "-" + code.substring(4))
+                .email("newowner-" + code + "@test.com")
                 .password("password123")
-                .residentNumber("901010-1234567")
+                .residentNumber(code + "-1234567")
                 .bankName("신한은행")
                 .accountNumber("110-123-456789")
                 .build();
@@ -105,12 +112,13 @@ class BookOwnerAuthServiceImplTest {
         @DisplayName("DTO의 User 관련 필드가 올바르게 저장된다")
         void signup_userFieldsSaved() {
             // given
+            String code = uniqueCode();
             BookOwnerJoinRequestDto dto = BookOwnerJoinRequestDto.builder()
                     .name("김철수")
-                    .phone("010-9999-8888")
-                    .email("kimcs@test.com")
+                    .phone("010-" + code.substring(0, 4) + "-" + code.substring(4))
+                    .email("kimcs-" + code + "@test.com")
                     .password("securePass")
-                    .residentNumber("850505-1234567")
+                    .residentNumber(code + "-1234567")
                     .bankName("국민은행")
                     .accountNumber("123-456-789")
                     .build();
@@ -122,21 +130,22 @@ class BookOwnerAuthServiceImplTest {
             UserVO savedUser = userMapper.selectById(result.getId());
 
             assertThat(savedUser.getName()).isEqualTo("김철수");
-            assertThat(savedUser.getPhone()).isEqualTo("010-9999-8888");
-            assertThat(savedUser.getEmail()).isEqualTo("kimcs@test.com");
-            assertThat(savedUser.getResidentNumber()).isEqualTo("850505-1234567");
+            assertThat(savedUser.getPhone()).isEqualTo(dto.getPhone());
+            assertThat(savedUser.getEmail()).isEqualTo(dto.getEmail());
+            assertThat(savedUser.getResidentNumber()).isEqualTo(dto.getResidentNumber());
         }
 
         @Test
         @DisplayName("DTO의 BankAccount 관련 필드가 올바르게 저장된다")
         void signup_bankAccountFieldsSaved() {
             // given
+            String code = uniqueCode();
             BookOwnerJoinRequestDto dto = BookOwnerJoinRequestDto.builder()
                     .name("이영희")
-                    .phone("010-5555-6666")
-                    .email("leeyh@test.com")
+                    .phone("010-" + code.substring(0, 4) + "-" + code.substring(4))
+                    .email("leeyh-" + code + "@test.com")
                     .password("password")
-                    .residentNumber("920202-2234567")
+                    .residentNumber(code + "-2234567")
                     .bankName("우리은행")
                     .accountNumber("1002-123-456789")
                     .build();
@@ -181,22 +190,24 @@ class BookOwnerAuthServiceImplTest {
         @DisplayName("여러 번 회원가입해도 각각 다른 ID가 부여된다")
         void multipleSignups_differentIds() {
             // given
+            String code1 = uniqueCode();
             BookOwnerJoinRequestDto dto1 = BookOwnerJoinRequestDto.builder()
                     .name("사용자1")
-                    .phone("010-1111-1111")
-                    .email("user1@test.com")
+                    .phone("010-" + code1.substring(0, 4) + "-" + code1.substring(4))
+                    .email("user1-" + code1 + "@test.com")
                     .password("pass1")
-                    .residentNumber("900101-1111111")
+                    .residentNumber(code1 + "-1111111")
                     .bankName("은행1")
                     .accountNumber("111-111-111")
                     .build();
 
+            String code2 = uniqueCode();
             BookOwnerJoinRequestDto dto2 = BookOwnerJoinRequestDto.builder()
                     .name("사용자2")
-                    .phone("010-2222-2222")
-                    .email("user2@test.com")
+                    .phone("010-" + code2.substring(0, 4) + "-" + code2.substring(4))
+                    .email("user2-" + code2 + "@test.com")
                     .password("pass2")
-                    .residentNumber("900202-2222222")
+                    .residentNumber(code2 + "-2222222")
                     .bankName("은행2")
                     .accountNumber("222-222-222")
                     .build();

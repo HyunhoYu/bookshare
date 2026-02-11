@@ -32,5 +32,5 @@ jwt:
 
 toss:
   payments:
-    secret-key: ${TOSS_SECRET_KEY:test_sk_no_key_set}
+    secret-key: ${TOSS_SECRET_KEY}
     base-url: https://api.tosspayments.com/v1

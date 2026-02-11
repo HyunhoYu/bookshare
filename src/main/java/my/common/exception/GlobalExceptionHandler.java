@@ -1,6 +1,7 @@
 package my.common.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -38,6 +39,15 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.badRequest(message));
     }
 
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<?>> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        log.warn("DataIntegrityViolation: {}", e.getMessage());
+
+        return ResponseEntity
+                .status(409)
+                .body(ApiResponse.error(409, "데이터 무결성 제약조건 위반입니다."));
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleException(Exception e) {

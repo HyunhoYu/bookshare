@@ -39,12 +39,13 @@ class JwtProviderTest {
     }
 
     private UserVO createTestUser(Long id, Role role) {
-        return UserVO.builder()
-                .id(id)
+        UserVO user = UserVO.builder()
                 .role(role)
                 .name("테스트유저")
                 .email("test@test.com")
                 .build();
+        user.setId(id);
+        return user;
     }
 
     @Nested

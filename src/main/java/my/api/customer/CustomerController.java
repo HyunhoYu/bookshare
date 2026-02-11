@@ -26,8 +26,8 @@ public class CustomerController {
 
     @RequireRole(value = {Role.ADMIN, Role.CUSTOMER}, checkOwnership = true)
     @GetMapping("/{id}")
-    public ApiResponse<UserVO> findOne(@PathVariable("id") Long id) {
-        return ApiResponse.success(customerService.findOne(id));
+    public ApiResponse<UserVO> findById(@PathVariable("id") Long id) {
+        return ApiResponse.success(customerService.findById(id));
     }
 
     @RequireRole(value = {Role.ADMIN, Role.CUSTOMER}, checkOwnership = true)

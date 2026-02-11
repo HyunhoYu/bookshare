@@ -111,8 +111,8 @@ class BookOwnerServiceTest {
     }
 
     @Nested
-    @DisplayName("findOne() 테스트")
-    class FindOneTest {
+    @DisplayName("findById() 테스트")
+    class FindByIdTest {
 
         @Test
         @DisplayName("ID로 책소유주를 조회한다")
@@ -121,7 +121,7 @@ class BookOwnerServiceTest {
             given(bookOwnerMapper.selectOne(1L)).willReturn(testBookOwner);
 
             // when
-            BookOwnerVO result = bookOwnerService.findOne(1L);
+            BookOwnerVO result = bookOwnerService.findById(1L);
 
             // then
             assertThat(result).isNotNull();
@@ -137,7 +137,7 @@ class BookOwnerServiceTest {
             given(bookOwnerMapper.selectOne(999L)).willReturn(null);
 
             // when
-            BookOwnerVO result = bookOwnerService.findOne(999L);
+            BookOwnerVO result = bookOwnerService.findById(999L);
 
             // then
             assertThat(result).isNull();

@@ -1,7 +1,7 @@
 package my.domain.customer.service.auth;
 
 import lombok.RequiredArgsConstructor;
-import my.common.exception.DuplicateEmailException;
+import my.common.exception.ApplicationException;
 import my.common.exception.ErrorCode;
 import my.domain.customer.CustomerMapper;
 import my.domain.user.UserVO;
@@ -23,10 +23,6 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
     @Override
     @Transactional
     public UserVO signup(UserJoinRequestDto dto) {
-        if (userAuthService.findByEmail(dto.getEmail()) != null) {
-            throw new DuplicateEmailException(ErrorCode.DUPLICATE_EMAIL);
-        }
-
         UserVO userVO = UserVO.builder()
                 .role(Role.CUSTOMER)
                 .name(dto.getName())
@@ -37,7 +33,10 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
                 .build();
 
         userAuthService.save(userVO);
-        customerMapper.insert(userVO.getId());
+        int result = customerMapper.insert(userVO.getId());
+        if (result != 1) {
+            throw new ApplicationException(ErrorCode.CUSTOMER_INSERT_FAIL);
+        }
         return userVO;
     }
 }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.address.AddressMapper">
+
+    <resultMap id="addressResultMap" type="my.domain.address.vo.AddressVO">
+        <id property="userId" column="ID"/>
+        <result property="city" column="CITY"/>
+        <result property="loadAddr" column="LOAD_ADDR"/>
+        <result property="specificAddr" column="SPECIFIC_ADDR"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="my.domain.address.vo.AddressVO">
+        INSERT INTO ADDRESS (ID, CITY, LOAD_ADDR, SPECIFIC_ADDR)
+        VALUES (#{userId}, #{city, jdbcType=VARCHAR}, #{loadAddr, jdbcType=VARCHAR}, #{specificAddr, jdbcType=VARCHAR})
+    </insert>
+
+    <select id="selectByUserId" parameterType="long" resultMap="addressResultMap">
+        SELECT * FROM ADDRESS WHERE ID = #{userId}
+    </select>
+
+</mapper>

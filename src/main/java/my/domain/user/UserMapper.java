@@ -13,8 +13,10 @@ public interface UserMapper {
     UserVO selectById(Long id);
     UserVO selectByEmail(String email);
     List<UserVO> selectAll();
-    int updateOne(UserUpdateDto dto);
+    int update(UserUpdateDto dto);
     int softDeleteOne(Long id);
+    UserVO selectByPhone(String phone);
+    UserVO selectByResidentNumber(String residentNumber);
     UserVO selectBookOwnerByNameAndPhone(@Param("name") String name, @Param("phone") String phone);
     List<UserVO> selectUsersByPhoneNumberLastFour(@Param("lastFour") String lastFour);
 

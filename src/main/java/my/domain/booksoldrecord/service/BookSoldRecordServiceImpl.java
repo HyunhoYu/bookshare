@@ -1,8 +1,9 @@
 package my.domain.booksoldrecord.service;
 
+import static my.common.util.EntityUtil.requireNonNull;
+
 import lombok.RequiredArgsConstructor;
 import my.common.exception.ApplicationException;
-import my.common.exception.BookNotFoundException;
 import my.common.exception.ErrorCode;
 import my.domain.book.BookMapper;
 import my.domain.book.BookVO;
@@ -25,18 +26,6 @@ public class BookSoldRecordServiceImpl implements BookSoldRecordService {
     private final BookSoldRecordMapper bookSoldRecordMapper;
     private final SettlementRatioService settlementRatioService;
 
-     /*
-        1. bookId검증
-        2. bookId로 book 조회
-        3. set (sold_price, id)
-
-
-        6. set(customer_id)
-
-        7. set(common_code_id)
-        8. book_owner_settlement_id = null
-        9. settlement_ratio_id = null
-         */
 
 
 
@@ -52,11 +41,7 @@ public class BookSoldRecordServiceImpl implements BookSoldRecordService {
 
         for (BuyBookRequestDto buyBookRequestDto : buyBookRequestDtos) {
             Long bookId = buyBookRequestDto.getBookId();
-            BookVO bookVO = bookMapper.selectById(bookId);
-
-            if (bookVO == null) {
-                throw new BookNotFoundException(ErrorCode.BOOK_NOT_FOUND);
-            }
+            BookVO bookVO = requireNonNull(bookMapper.selectById(bookId), ErrorCode.BOOK_NOT_FOUND);
 
             BookSoldRecordVO soldRecord = createSoldRecord(bookVO, buyBookRequestDto);
             result.add(soldRecord);
@@ -73,7 +58,7 @@ public class BookSoldRecordServiceImpl implements BookSoldRecordService {
         bookSoldRecordVO.setCustomerId(dto.getCustomerId());
         bookSoldRecordVO.setCommonCodeId(dto.getBuyTypeCommonCode());
         bookSoldRecordVO.setBookOwnerSettlementId(null);
-        bookSoldRecordVO.setRatioId(settlementRatioService.getRatio().getId());
+        bookSoldRecordVO.setRatioId(settlementRatioService.findCurrentRatio().getId());
 
         int result = bookMapper.updateStateSold(bookVO.getId());
 

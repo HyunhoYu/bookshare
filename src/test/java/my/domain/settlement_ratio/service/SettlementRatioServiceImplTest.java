@@ -30,7 +30,7 @@ class SettlementRatioServiceImplTest {
         SettlementRatioVO vo = createVO(0.7, 0.3);
 
         // when
-        long id = settlementRatioService.setRatio(vo);
+        long id = settlementRatioService.create(vo);
 
         // then
         assertThat(id).isGreaterThan(0);
@@ -43,8 +43,8 @@ class SettlementRatioServiceImplTest {
         SettlementRatioVO vo = createVO(0.6, 0.4);
 
         // when
-        settlementRatioService.setRatio(vo);
-        SettlementRatioVO current = settlementRatioService.getRatio();
+        settlementRatioService.create(vo);
+        SettlementRatioVO current = settlementRatioService.findCurrentRatio();
 
         // then
         assertThat(current).isNotNull();
@@ -56,11 +56,11 @@ class SettlementRatioServiceImplTest {
     @DisplayName("비율 두 번 저장 시 최신 것 조회")
     void setRatioTwice_getLatest() {
         // given
-        settlementRatioService.setRatio(createVO(0.5, 0.5));
-        settlementRatioService.setRatio(createVO(0.8, 0.2));
+        settlementRatioService.create(createVO(0.5, 0.5));
+        settlementRatioService.create(createVO(0.8, 0.2));
 
         // when
-        SettlementRatioVO current = settlementRatioService.getRatio();
+        SettlementRatioVO current = settlementRatioService.findCurrentRatio();
 
         // then
         assertThat(current.getOwnerRatio()).isEqualTo(0.8);

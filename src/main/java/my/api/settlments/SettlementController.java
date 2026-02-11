@@ -8,6 +8,7 @@ import my.domain.settlement.dto.SettlementRequestDto;
 import my.domain.settlement.service.SettlementService;
 import my.domain.settlement.vo.SettlementVO;
 import my.enums.Role;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class SettlementController {
 
     @RequireRole(Role.ADMIN)
     @PostMapping
-    public ApiResponse<SettlementVO> settle(@RequestBody SettlementRequestDto requestDto) {
+    public ApiResponse<SettlementVO> settle(@RequestBody @Valid SettlementRequestDto requestDto) {
         SettlementVO settlement = settlementService.settle(requestDto);
         return ApiResponse.created(settlement);
     }

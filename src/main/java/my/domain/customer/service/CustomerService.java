@@ -8,7 +8,7 @@ import java.util.List;
 public interface CustomerService {
 
     List<UserVO> findAll();
-    UserVO findOne(Long id);
+    UserVO findById(Long id);
     UserVO update(UserUpdateDto dto);
     void delete(Long id);
 }

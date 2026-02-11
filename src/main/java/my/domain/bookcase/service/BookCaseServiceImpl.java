@@ -1,7 +1,10 @@
 package my.domain.bookcase.service;
 
+import static my.common.util.EntityUtil.requireNonNull;
+
 import lombok.RequiredArgsConstructor;
-import my.common.exception.*;
+import my.common.exception.ApplicationException;
+import my.common.exception.ErrorCode;
 import my.domain.book.BookMapper;
 import my.domain.book.BookVO;
 import my.domain.bookcase.*;
@@ -29,22 +32,31 @@ public class BookCaseServiceImpl implements BookCaseService {
     private final CommonCodeMapper commonCodeMapper;
 
     @Override
-    public long addBookCase(BookCaseVO bookCaseVO) {
-        // 책장 타입이 실제로 존재하는지 검증
-        BookCaseTypeVO bookCaseType = bookCaseTypeMapper.selectById(bookCaseVO.getBookCaseTypeId());
-        if (bookCaseType == null) {
-            throw new BookCaseTypeNotFoundException(ErrorCode.BOOK_CASE_TYPE_NOT_FOUND);
-        }
+    public long create(BookCaseCreateDto dto) {
+        requireNonNull(bookCaseTypeMapper.selectById(dto.getBookCaseTypeId()), ErrorCode.BOOK_CASE_TYPE_NOT_FOUND);
 
-        int result = bookCaseMapper.insertBookCase(bookCaseVO);
+        String locationCode = resolveLocationCode(dto.getLocationName());
+
+        BookCaseVO bookCaseVO = new BookCaseVO();
+        bookCaseVO.setCommonCodeId(locationCode);
+        bookCaseVO.setBookCaseTypeId(dto.getBookCaseTypeId());
+
+        int result = bookCaseMapper.insert(bookCaseVO);
         if (result != 1) {
-            throw new RuntimeException("책장 저장 실패");
+            throw new ApplicationException(ErrorCode.BOOK_CASE_INSERT_FAIL);
         }
         return bookCaseVO.getId();
     }
 
+    private String resolveLocationCode(String locationName) {
+        CommonCodeVO codeVO = requireNonNull(
+                commonCodeMapper.selectByGroupCodeAndCodeName("LOCATION", locationName),
+                ErrorCode.INVALID_LOCATION_CODE);
+        return codeVO.getCode();
+    }
+
     @Override
-    public BookCaseVO findById(long id) {
+    public BookCaseVO findById(Long id) {
         return bookCaseMapper.selectById(id);
     }
 
@@ -54,40 +66,43 @@ public class BookCaseServiceImpl implements BookCaseService {
     }
 
     @Override
-    public List<BookCaseVO> findUsableBookCases() {
+    public List<BookCaseVO> findUsable() {
         return bookCaseMapper.selectUsableBookCases();
     }
 
 
     @Override
-    public boolean isOccupied(long bookCaseId) {
+    public boolean isOccupied(Long bookCaseId) {
         return occupiedRecordMapper.countCurrentOccupied(bookCaseId) > 0;
     }
 
 
     @Override
     @Transactional
-    public BookCaseOccupiedRecordVO occupy(long bookOwnerId, long bookCaseId) {
-        BookCaseVO bookCase = bookCaseMapper.selectById(bookCaseId);
-        if (bookCase == null) {
-            throw new BookCaseNotFoundException(ErrorCode.BOOK_CASE_NOT_FOUND);
+    public List<BookCaseOccupiedRecordVO> occupy(Long bookOwnerId, List<Long> bookCaseIds) {
+        List<BookCaseOccupiedRecordVO> results = new ArrayList<>();
+
+        for (Long bookCaseId : bookCaseIds) {
+            validateBookCaseExists(bookCaseId);
+
+            if (isOccupied(bookCaseId)) {
+                throw new ApplicationException(ErrorCode.BOOK_CASE_ALREADY_OCCUPIED);
+            }
+
+            BookCaseOccupiedRecordVO record = new BookCaseOccupiedRecordVO();
+            record.setBookOwnerId(bookOwnerId);
+            record.setBookCaseId(bookCaseId);
+
+            occupiedRecordMapper.insert(record);
+            results.add(occupiedRecordMapper.selectById(record.getId()));
         }
 
-        if (isOccupied(bookCaseId)) {
-            throw new BookCaseAlreadyOccupiedException(ErrorCode.BOOK_CASE_ALREADY_OCCUPIED);
-        }
-
-        BookCaseOccupiedRecordVO record = new BookCaseOccupiedRecordVO();
-        record.setBookOwnerId(bookOwnerId);
-        record.setBookCaseId(bookCaseId);
-
-        occupiedRecordMapper.insert(record);
-        return occupiedRecordMapper.selectById(record.getId());
+        return results;
     }
 
     @Override
     @Transactional
-    public List<BookVO> registerBooks(long bookCaseId, List<BookRegisterDto> bookRegisterDtos) {
+    public List<BookVO> registerBooks(Long bookCaseId, List<BookRegisterDto> bookRegisterDtos) {
         validateBookCaseExists(bookCaseId);
         UserVO bookOwner = findBookOwnerByNameAndPhone(bookRegisterDtos);
         validateOwnerOccupiesBookCase(bookCaseId, bookOwner.getId());
@@ -97,20 +112,18 @@ public class BookCaseServiceImpl implements BookCaseService {
                 .toList();
     }
 
-    private void validateBookCaseExists(long bookCaseId) {
-        if (bookCaseMapper.selectById(bookCaseId) == null) {
-            throw new BookCaseNotFoundException(ErrorCode.BOOK_CASE_NOT_FOUND);
-        }
+    private void validateBookCaseExists(Long bookCaseId) {
+        requireNonNull(bookCaseMapper.selectById(bookCaseId), ErrorCode.BOOK_CASE_NOT_FOUND);
     }
 
-    private void validateOwnerOccupiesBookCase(long bookCaseId, Long bookOwnerId) {
+    private void validateOwnerOccupiesBookCase(Long bookCaseId, Long bookOwnerId) {
         BookCaseOccupiedRecordVO record = occupiedRecordMapper.selectCurrentByBookCaseId(bookCaseId);
         if (record == null || !record.getBookOwnerId().equals(bookOwnerId)) {
-            throw new ForbiddenException(ErrorCode.BOOK_CASE_NOT_OCCUPIED_BY_OWNER);
+            throw new ApplicationException(ErrorCode.BOOK_CASE_NOT_OCCUPIED_BY_OWNER);
         }
     }
 
-    private BookVO createBook(BookRegisterDto dto, Long bookOwnerId, long bookCaseId) {
+    private BookVO createBook(BookRegisterDto dto, Long bookOwnerId, Long bookCaseId) {
         String commonCodeId = resolveBookTypeCode(dto.getBookType());
 
         BookVO bookVO = new BookVO();
@@ -121,7 +134,7 @@ public class BookCaseServiceImpl implements BookCaseService {
         bookVO.setPrice(dto.getPrice());
         bookVO.setCommonCodeId(commonCodeId);
 
-        int result = bookMapper.insertBook(bookVO);
+        int result = bookMapper.insert(bookVO);
         if (result != 1) {
             throw new ApplicationException(ErrorCode.BOOK_INSERT_FAIL);
         }
@@ -130,10 +143,9 @@ public class BookCaseServiceImpl implements BookCaseService {
     }
 
     private String resolveBookTypeCode(String bookTypeName) {
-        CommonCodeVO codeVO = commonCodeMapper.selectByGroupCodeAndCodeName("BOOK_TYPE", bookTypeName);
-        if (codeVO == null) {
-            throw new ApplicationException(ErrorCode.INVALID_BOOK_TYPE);
-        }
+        CommonCodeVO codeVO = requireNonNull(
+                commonCodeMapper.selectByGroupCodeAndCodeName("BOOK_TYPE", bookTypeName),
+                ErrorCode.INVALID_BOOK_TYPE);
         return codeVO.getCode();
     }
 
@@ -145,14 +157,14 @@ public class BookCaseServiceImpl implements BookCaseService {
                 .allMatch(dto -> dto.getUserName().equals(name) && dto.getUserPhone().equals(phone));
 
         if (!allSameOwner) {
-            throw new BookOwnerMismatchException(ErrorCode.BOOK_OWNER_MISMATCH);
+            throw new ApplicationException(ErrorCode.BOOK_OWNER_MISMATCH);
         }
 
         return userMapper.selectBookOwnerByNameAndPhone(name, phone);
     }
 
     @Override
-    public List<Long> selectMyOccupyingBookCasesByBookOwnerId(Long bookOwnerId) {
+    public List<Long> findOccupyingBookCaseIds(Long bookOwnerId) {
         return bookCaseMapper.selectMyOccupyingBookCasesByBookOwnerId(bookOwnerId);
     }
 
@@ -185,9 +197,7 @@ public class BookCaseServiceImpl implements BookCaseService {
     }
 
     private void validateCurrentlyOccupied(BookCaseOccupiedRecordVO record) {
-        if (record == null) {
-            throw new ApplicationException(ErrorCode.BOOK_CASE_NOT_OCCUPIED);
-        }
+        requireNonNull(record, ErrorCode.BOOK_CASE_NOT_OCCUPIED);
     }
 
     private void validateUnoccupyResult(int result, int expected) {

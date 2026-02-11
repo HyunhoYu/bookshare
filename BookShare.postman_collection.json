@@ -1,0 +1,730 @@
+{
+	"info": {
+		"name": "BookShare",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:8080" },
+		{ "key": "adminToken", "value": "" },
+		{ "key": "bookOwnerToken", "value": "" },
+		{ "key": "customerToken", "value": "" },
+		{ "key": "bookOwnerId", "value": "" },
+		{ "key": "bookCaseTypeId", "value": "" },
+		{ "key": "bookCaseId", "value": "" },
+		{ "key": "bookId", "value": "" },
+		{ "key": "bookId2", "value": "" },
+		{ "key": "customerId", "value": "" },
+		{ "key": "saleRecordId", "value": "" },
+		{ "key": "retrieveBookIds", "value": "" }
+	],
+	"item": [
+		{
+			"name": "Phase 1. Setup",
+			"item": [
+				{
+					"name": "1-1. Admin Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();",
+									"if (res.data && res.data.token) {",
+									"    pm.collectionVariables.set('adminToken', res.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@bookshare.com\",\n    \"password\": \"admin1234\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "1-2. Set Settlement Ratio",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ownerRatio\": 0.7,\n    \"storeRatio\": 0.3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/settlements/ratio/set",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "settlements", "ratio", "set"]
+						}
+					}
+				},
+				{
+					"name": "1-3. Add BookCase Type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();",
+									"if (res.data && res.data.id) {",
+									"    pm.collectionVariables.set('bookCaseTypeId', res.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"TYPE_A\",\n    \"monthlyPrice\": 50000\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/book-case-types",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-case-types"]
+						}
+					}
+				},
+				{
+					"name": "1-4. Add BookCase",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();",
+									"if (res.data && res.data.id) {",
+									"    pm.collectionVariables.set('bookCaseId', res.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"locationCode\": \"A-01\",\n    \"bookCaseTypeId\": {{bookCaseTypeId}}\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/book-cases",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-cases"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Phase 2. BookOwner & Occupy",
+			"item": [
+				{
+					"name": "2-1. Register BookOwner",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();",
+									"if (res.data && res.data.token) {",
+									"    pm.collectionVariables.set('bookOwnerToken', res.data.token);",
+									"    var payload = res.data.token.split('.')[1];",
+									"    var decoded = JSON.parse(atob(payload));",
+									"    if (decoded.userId) {",
+									"        pm.collectionVariables.set('bookOwnerId', decoded.userId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"TestOwner\",\n    \"residentNumber\": \"990101-1234567\",\n    \"phone\": \"010-1234-5678\",\n    \"address\": \"Seoul\",\n    \"email\": \"owner@test.com\",\n    \"password\": \"owner1234\",\n    \"bankName\": \"국민은행\",\n    \"accountNumber\": \"123-456-789\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/book-owner",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "book-owner"]
+						}
+					}
+				},
+				{
+					"name": "2-2. Get Usable BookCases",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-cases/usable",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-cases", "usable"]
+						}
+					}
+				},
+				{
+					"name": "2-3. Occupy BookCases",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bookOwnerId\": {{bookOwnerId}},\n    \"bookCaseIds\": [{{bookCaseId}}]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/book-cases/occupy",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-cases", "occupy"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Phase 3. Books & Sale",
+			"item": [
+				{
+					"name": "3-1. Register Books",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();",
+									"if (res.data && res.data.length > 0) {",
+									"    pm.collectionVariables.set('bookId', res.data[0].id);",
+									"    if (res.data.length > 1) {",
+									"        pm.collectionVariables.set('bookId2', res.data[1].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"userName\": \"TestOwner\",\n        \"userPhone\": \"010-1234-5678\",\n        \"bookName\": \"Clean Code\",\n        \"publisherHouse\": \"Insight\",\n        \"price\": 33000,\n        \"bookType\": \"IT\"\n    },\n    {\n        \"userName\": \"TestOwner\",\n        \"userPhone\": \"010-1234-5678\",\n        \"bookName\": \"Refactoring\",\n        \"publisherHouse\": \"Hanbit\",\n        \"price\": 35000,\n        \"bookType\": \"IT\"\n    }\n]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/book-cases/{{bookCaseId}}/books",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-cases", "{{bookCaseId}}", "books"]
+						}
+					}
+				},
+				{
+					"name": "3-2. Register Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();",
+									"if (res.data && res.data.token) {",
+									"    pm.collectionVariables.set('customerToken', res.data.token);",
+									"    var payload = res.data.token.split('.')[1];",
+									"    var decoded = JSON.parse(atob(payload));",
+									"    if (decoded.userId) {",
+									"        pm.collectionVariables.set('customerId', decoded.userId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"TestCustomer\",\n    \"residentNumber\": \"950202-2345678\",\n    \"phone\": \"010-9999-8888\",\n    \"address\": \"Busan\",\n    \"email\": \"customer@test.com\",\n    \"password\": \"cust1234\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/customer",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "customer"]
+						}
+					}
+				},
+				{
+					"name": "3-3. Customer - Browse Books",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/customer/books",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customer", "books"]
+						}
+					}
+				},
+				{
+					"name": "3-4. Sell Book (1 of 2)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();",
+									"if (res.data && res.data.length > 0) {",
+									"    pm.collectionVariables.set('saleRecordId', res.data[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"bookId\": {{bookId}},\n        \"customerId\": {{customerId}},\n        \"buyTypeCommonCode\": \"01\"\n    }\n]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/book-sale-records",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-sale-records"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Phase 4. Settlement",
+			"item": [
+				{
+					"name": "4-1. Get All Pending Settlements",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/settlements/pending",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "settlements", "pending"]
+						}
+					}
+				},
+				{
+					"name": "4-2. Get BookOwner Pending Settlements",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-owners/{{bookOwnerId}}/settlements/pending",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-owners", "{{bookOwnerId}}", "settlements", "pending"]
+						}
+					}
+				},
+				{
+					"name": "4-3. Execute Settlement",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bookOwnerId\": {{bookOwnerId}},\n    \"saleRecordIds\": [{{saleRecordId}}]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/settlements",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "settlements"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Phase 5. Unoccupy & Retrieve",
+			"item": [
+				{
+					"name": "5-1. Unoccupy BookCases",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var res = pm.response.json();",
+									"if (res.data && res.data.length > 0) {",
+									"    pm.collectionVariables.set('retrieveBookIds', JSON.stringify(res.data));",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[{{bookCaseId}}]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/book-cases/unoccupy",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-cases", "unoccupy"]
+						},
+						"description": "NORMAL -> SHOULD_BE_RETRIEVED. SOLD books are not affected. Returns bookIds that changed state."
+					}
+				},
+				{
+					"name": "5-2. Retrieve Books (soft delete)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{{retrieveBookIds}}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/books/retrieve",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "books", "retrieve"]
+						},
+						"description": "SHOULD_BE_RETRIEVED -> DELETED_AT = SYSTIMESTAMP (soft delete)"
+					}
+				}
+			]
+		},
+		{
+			"name": "Queries - BookOwner",
+			"item": [
+				{
+					"name": "Get All BookOwners",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-owners",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-owners"]
+						}
+					}
+				},
+				{
+					"name": "Get BookOwner by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-owners/{{bookOwnerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-owners", "{{bookOwnerId}}"]
+						}
+					}
+				},
+				{
+					"name": "Get BookOwner's Books",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-owners/{{bookOwnerId}}/books",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-owners", "{{bookOwnerId}}", "books"]
+						}
+					}
+				},
+				{
+					"name": "Get BookOwner's Sold Books",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-owners/{{bookOwnerId}}/books/sold",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-owners", "{{bookOwnerId}}", "books", "sold"]
+						}
+					}
+				},
+				{
+					"name": "Get BookOwner's All Settlements",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-owners/{{bookOwnerId}}/settlements",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-owners", "{{bookOwnerId}}", "settlements"]
+						}
+					}
+				},
+				{
+					"name": "Get BookOwner's Completed Settlements",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-owners/{{bookOwnerId}}/settlements/completed",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-owners", "{{bookOwnerId}}", "settlements", "completed"]
+						}
+					}
+				},
+				{
+					"name": "Get My BookCases",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{bookOwnerToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-cases/{{bookOwnerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-cases", "{{bookOwnerId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Queries - Admin",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users"]
+						}
+					}
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get All BookCases",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-cases",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-cases"]
+						}
+					}
+				},
+				{
+					"name": "Get BookCase by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-cases/{{bookCaseId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-cases", "{{bookCaseId}}"]
+						}
+					}
+				},
+				{
+					"name": "Get All BookCase Types",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/book-case-types",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "book-case-types"]
+						}
+					}
+				},
+				{
+					"name": "Get All Customers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers"]
+						}
+					}
+				},
+				{
+					"name": "Get Customer by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/{{customerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "{{customerId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Manage - User CRUD",
+			"item": [
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"UpdatedName\",\n    \"phone\": \"010-0000-0000\",\n    \"email\": \"updated@test.com\",\n    \"password\": \"newpass1234\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{bookOwnerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "{{bookOwnerId}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete User (soft delete)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{bookOwnerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "{{bookOwnerId}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Customer",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"UpdatedCustomer\",\n    \"phone\": \"010-1111-2222\",\n    \"email\": \"updated_cust@test.com\",\n    \"password\": \"newcust1234\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/{{customerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "{{customerId}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Customer (soft delete)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{adminToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/{{customerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "{{customerId}}"]
+						}
+					}
+				}
+			]
+		}
+	]
+}

@@ -11,4 +11,5 @@ public class BankAccountVO extends MyApplicationVO {
 
     private String accountNumber;
     private String bankName;
+    private String bankCode;
 }

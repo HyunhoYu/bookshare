@@ -13,6 +13,7 @@ public class BankAccountAuthServiceImpl implements BankAccountAuthService{
     private final BankAccountMapper bankAccountMapper;
 
     @Override
+    @Transactional
     public int save(BankAccountVO bankAccountVO) {
         return bankAccountMapper.insert(bankAccountVO);
     }

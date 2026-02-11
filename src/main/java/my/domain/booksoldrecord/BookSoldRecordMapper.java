@@ -1,6 +1,7 @@
 package my.domain.booksoldrecord;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -20,4 +21,5 @@ public interface BookSoldRecordMapper {
     int countByIdsAndBookOwnerId(@Param("ids") List<Long> ids, @Param("bookOwnerId") Long bookOwnerId);
     int countAlreadySettled(@Param("ids") List<Long> ids);
     int updateSettlementId(@Param("settlementId") Long settlementId, @Param("ids") List<Long> ids);
+    Map<String, Object> sumAmountsByIds(@Param("ids") List<Long> ids);
 }

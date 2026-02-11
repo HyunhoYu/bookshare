@@ -6,8 +6,8 @@ import java.util.List;
 
 public interface SettlementRatioService {
 
-    long setRatio(SettlementRatioVO settlementRatioVO);
-    SettlementRatioVO getRatio();
-    List<SettlementRatioVO> getRatioHistory();
+    long create(SettlementRatioVO settlementRatioVO);
+    SettlementRatioVO findCurrentRatio();
+    List<SettlementRatioVO> findAll();
 
 }

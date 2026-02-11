@@ -11,8 +11,9 @@ public interface BookMapper {
     List<BookVO> selectAll();
     List<BookVO> selectBooksByBookOwnerId(Long id);
     List<BookVO> selectSoldBookByBookOwnerId(Long id);
-    int insertBook(BookVO bookVO);
+    int insert(BookVO bookVO);
     BookVO selectById(Long id);
+    BookVO selectByIdIncludeDeleted(Long id);
     int updateStateSold(Long id);
     List<Long> selectNormalBookIdsByBookCaseIds(@Param("bookCaseIds") List<Long> bookCaseIds);
     int updateStateNormalToRetrieve(List<Long>bookIds);
