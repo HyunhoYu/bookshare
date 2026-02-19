@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -82,7 +83,7 @@ class FindUnsettledByBookOwnerTest {
         long typeId = bookCaseTypeService.create(typeDto);
 
         BookCaseCreateDto caseDto = new BookCaseCreateDto();
-        caseDto.setLocationName("1층 A구역");
+        caseDto.setLocationCode("01");
         caseDto.setBookCaseTypeId(typeId);
         long bookCaseId = bookCaseService.create(caseDto);
 
@@ -95,7 +96,7 @@ class FindUnsettledByBookOwnerTest {
                 .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
 
         return owner;
     }
@@ -132,7 +133,7 @@ class FindUnsettledByBookOwnerTest {
         bookDto.setBookName(bookName);
         bookDto.setPublisherHouse("publisher");
         bookDto.setPrice(price);
-        bookDto.setBookType("과학");
+        bookDto.setBookTypeCode("04");
         List<BookVO> registered = bookCaseService.registerBooks(bookCaseId, List.of(bookDto));
         Long bookId = registered.get(0).getId();
 
@@ -159,7 +160,7 @@ class FindUnsettledByBookOwnerTest {
         long typeId = bookCaseTypeService.create(typeDto);
 
         BookCaseCreateDto caseDto = new BookCaseCreateDto();
-        caseDto.setLocationName("1층 A구역");
+        caseDto.setLocationCode("01");
         caseDto.setBookCaseTypeId(typeId);
         long bookCaseId = bookCaseService.create(caseDto);
 
@@ -172,7 +173,7 @@ class FindUnsettledByBookOwnerTest {
                 .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
 
         BookRegisterDto bookDto = new BookRegisterDto();
         bookDto.setUserName(ownerName);
@@ -180,7 +181,7 @@ class FindUnsettledByBookOwnerTest {
         bookDto.setBookName(bookName);
         bookDto.setPublisherHouse("publisher");
         bookDto.setPrice(price);
-        bookDto.setBookType("과학");
+        bookDto.setBookTypeCode("04");
         List<BookVO> registered = bookCaseService.registerBooks(bookCaseId, List.of(bookDto));
         Long bookId = registered.get(0).getId();
 
@@ -209,7 +210,7 @@ class FindUnsettledByBookOwnerTest {
         long typeId = bookCaseTypeService.create(typeDto);
 
         BookCaseCreateDto caseDto = new BookCaseCreateDto();
-        caseDto.setLocationName("1층 A구역");
+        caseDto.setLocationCode("01");
         caseDto.setBookCaseTypeId(typeId);
         long bookCaseId = bookCaseService.create(caseDto);
 
@@ -222,7 +223,7 @@ class FindUnsettledByBookOwnerTest {
                 .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
 
         List<Long> soldBookIds = new java.util.ArrayList<>();
         for (int i = 0; i < bookNames.size(); i++) {
@@ -232,7 +233,7 @@ class FindUnsettledByBookOwnerTest {
             bookDto.setBookName(bookNames.get(i));
             bookDto.setPublisherHouse("publisher");
             bookDto.setPrice(prices.get(i));
-            bookDto.setBookType("과학");
+            bookDto.setBookTypeCode("04");
             List<BookVO> registered = bookCaseService.registerBooks(bookCaseId, List.of(bookDto));
             Long bookId = registered.get(0).getId();
 

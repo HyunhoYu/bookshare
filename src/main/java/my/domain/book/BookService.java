@@ -8,5 +8,7 @@ public interface BookService {
     List<BookVO> findBooksByBookOwnerId(Long id);
     List<BookVO> findSoldBookOfBookOwner(Long id);
     List<Long> retrieveBooks(List<Long> bookIds);
+    List<BookWithBookCaseVO> findAllWithBookCase(String state);
+    List<BookVO> findByBookCaseId(Long bookCaseId);
 
 }

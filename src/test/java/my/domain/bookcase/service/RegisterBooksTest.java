@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,7 +55,7 @@ class RegisterBooksTest {
 
         // 책장 생성
         BookCaseCreateDto caseDto = new BookCaseCreateDto();
-        caseDto.setLocationName("1층 A구역");
+        caseDto.setLocationCode("01");
         caseDto.setBookCaseTypeId(typeId);
         bookCaseId = bookCaseService.create(caseDto);
 
@@ -71,17 +72,17 @@ class RegisterBooksTest {
                 .build());
 
         // 책장 점유
-        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
     }
 
-    private BookRegisterDto createDto(String bookName, String publisherHouse, int price, String bookType) {
+    private BookRegisterDto createDto(String bookName, String publisherHouse, int price, String bookTypeCode) {
         BookRegisterDto dto = new BookRegisterDto();
         dto.setUserName(owner.getName());
         dto.setUserPhone(owner.getPhone());
         dto.setBookName(bookName);
         dto.setPublisherHouse(publisherHouse);
         dto.setPrice(price);
-        dto.setBookType(bookType);
+        dto.setBookTypeCode(bookTypeCode);
         return dto;
     }
 
@@ -89,7 +90,7 @@ class RegisterBooksTest {
     @DisplayName("책 등록 성공 - 단건")
     void registerBooks_single_success() {
         List<BookRegisterDto> dtos = List.of(
-                createDto("이펙티브 자바", "인사이트", 36000, "과학")
+                createDto("이펙티브 자바", "인사이트", 36000, "04")
         );
 
         List<BookVO> result = bookCaseService.registerBooks(bookCaseId, dtos);
@@ -106,9 +107,9 @@ class RegisterBooksTest {
     @DisplayName("책 등록 성공 - 다건")
     void registerBooks_multiple_success() {
         List<BookRegisterDto> dtos = List.of(
-                createDto("이펙티브 자바", "인사이트", 36000, "과학"),
-                createDto("삼국지", "민음사", 15000, "역사"),
-                createDto("축구의 역사", "한빛미디어", 22000, "스포츠")
+                createDto("이펙티브 자바", "인사이트", 36000, "04"),
+                createDto("삼국지", "민음사", 15000, "02"),
+                createDto("축구의 역사", "한빛미디어", 22000, "03")
         );
 
         List<BookVO> result = bookCaseService.registerBooks(bookCaseId, dtos);
@@ -129,7 +130,7 @@ class RegisterBooksTest {
     @DisplayName("실패 - 존재하지 않는 책장")
     void registerBooks_bookCaseNotFound() {
         List<BookRegisterDto> dtos = List.of(
-                createDto("테스트책", "출판사", 10000, "소설")
+                createDto("테스트책", "출판사", 10000, "01")
         );
 
         assertThatThrownBy(() -> bookCaseService.registerBooks(999999L, dtos))
@@ -141,12 +142,12 @@ class RegisterBooksTest {
     void registerBooks_notOccupiedByOwner() {
         // 새 책장 생성 (점유 안 함)
         BookCaseCreateDto newDto = new BookCaseCreateDto();
-        newDto.setLocationName("1층 B구역");
+        newDto.setLocationCode("02");
         newDto.setBookCaseTypeId(typeId);
         long unoccupiedCaseId = bookCaseService.create(newDto);
 
         List<BookRegisterDto> dtos = List.of(
-                createDto("테스트책", "출판사", 10000, "소설")
+                createDto("테스트책", "출판사", 10000, "01")
         );
 
         assertThatThrownBy(() -> bookCaseService.registerBooks(unoccupiedCaseId, dtos))
@@ -169,14 +170,14 @@ class RegisterBooksTest {
                 .build());
 
         BookCaseCreateDto otherDto = new BookCaseCreateDto();
-        otherDto.setLocationName("2층 A구역");
+        otherDto.setLocationCode("03");
         otherDto.setBookCaseTypeId(typeId);
         long otherCaseId = bookCaseService.create(otherDto);
-        bookCaseService.occupy(otherOwner.getId(), List.of(otherCaseId));
+        bookCaseService.occupy(otherOwner.getId(), List.of(otherCaseId), LocalDate.now().plusMonths(3));
 
         // 홍길동 이름으로 김철수의 책장에 등록 시도
         List<BookRegisterDto> dtos = List.of(
-                createDto("테스트책", "출판사", 10000, "소설")
+                createDto("테스트책", "출판사", 10000, "01")
         );
 
         assertThatThrownBy(() -> bookCaseService.registerBooks(otherCaseId, dtos))
@@ -186,8 +187,8 @@ class RegisterBooksTest {
     @Test
     @DisplayName("실패 - 소유주 정보가 리스트 내에서 불일치")
     void registerBooks_ownerMismatch() {
-        BookRegisterDto dto1 = createDto("책1", "출판사", 10000, "소설");
-        BookRegisterDto dto2 = createDto("책2", "출판사", 15000, "역사");
+        BookRegisterDto dto1 = createDto("책1", "출판사", 10000, "01");
+        BookRegisterDto dto2 = createDto("책2", "출판사", 15000, "02");
         dto2.setUserName("다른사람");
 
         List<BookRegisterDto> dtos = List.of(dto1, dto2);
@@ -200,7 +201,7 @@ class RegisterBooksTest {
     @DisplayName("실패 - 존재하지 않는 책 분류")
     void registerBooks_invalidBookType() {
         List<BookRegisterDto> dtos = List.of(
-                createDto("테스트책", "출판사", 10000, "존재하지않는분류")
+                createDto("테스트책", "출판사", 10000, "99")
         );
 
         assertThatThrownBy(() -> bookCaseService.registerBooks(bookCaseId, dtos))

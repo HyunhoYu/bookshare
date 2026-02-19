@@ -29,7 +29,6 @@ public class JwtFilter implements Filter {
         String path = httpServletRequest.getRequestURI();
         String token = resolveToken(httpServletRequest);
 
-
         List<String> whiteList = List.of(
                 "/api/auth/login",
                 "/api/auth/book-owner",

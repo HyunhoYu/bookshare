@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import my.annotation.RequireRole;
 import my.common.response.ApiResponse;
 import my.domain.book.BookVO;
+import my.domain.bookcase.BookCaseVO;
 import my.domain.bookowner.service.BookOwnerService;
 import my.domain.bookowner.vo.BookOwnerVO;
 import my.domain.booksoldrecord.vo.BookSoldRecordVO;
@@ -72,5 +73,13 @@ public class BookOwnerController {
     public ApiResponse<List<BookSoldRecordVO>> findMyUnSettled(@PathVariable("id") Long id) {
         List<BookSoldRecordVO> myUnSettled = bookOwnerService.findMyUnSettled(id);
         return ApiResponse.success(myUnSettled);
+    }
+
+    @RequireRole(value = {Role.ADMIN, Role.BOOK_OWNER}, checkOwnership = true)
+    @GetMapping("/{id}/bookcases")
+    public ApiResponse<List<BookCaseVO>> findMyBookCases(@PathVariable("id") Long id) {
+        List<BookCaseVO> result = bookOwnerService.findMyBookCases(id);
+
+        return ApiResponse.success(result);
     }
 }

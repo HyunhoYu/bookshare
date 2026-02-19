@@ -3,10 +3,12 @@ package my.api.bookcase;
 import lombok.RequiredArgsConstructor;
 import my.annotation.RequireRole;
 import my.common.response.ApiResponse;
+import my.domain.book.BookService;
 import my.domain.book.BookVO;
 import my.domain.bookcase.BookCaseCreateDto;
 import my.domain.bookcase.BookCaseOccupiedRecordVO;
 import my.domain.bookcase.BookCaseVO;
+import my.domain.bookcase.BookCaseWithOccupationVO;
 import my.domain.bookcase.BookRegisterDto;
 import my.domain.bookcase.OccupyRequestDto;
 import my.domain.bookcase.service.BookCaseService;
@@ -22,6 +24,7 @@ import java.util.List;
 public class BookCaseController {
 
     private final BookCaseService bookCaseService;
+    private final BookService bookService;
 
     @RequireRole(Role.ADMIN)
     @PostMapping
@@ -33,8 +36,8 @@ public class BookCaseController {
 
     @RequireRole(Role.ADMIN)
     @GetMapping
-    public ApiResponse<List<BookCaseVO>> findAll() {
-        return ApiResponse.success(bookCaseService.findAll());
+    public ApiResponse<List<BookCaseWithOccupationVO>> findAll() {
+        return ApiResponse.success(bookCaseService.findAllWithOccupation());
     }
 
     @RequireRole(Role.ADMIN)
@@ -54,8 +57,15 @@ public class BookCaseController {
     @RequireRole(Role.ADMIN)
     @PostMapping("/occupy")
     public ApiResponse<List<BookCaseOccupiedRecordVO>> occupy(@RequestBody @Valid OccupyRequestDto dto) {
-        List<BookCaseOccupiedRecordVO> result = bookCaseService.occupy(dto.getBookOwnerId(), dto.getBookCaseIds());
+        List<BookCaseOccupiedRecordVO> result = bookCaseService.occupy(dto.getBookOwnerId(), dto.getBookCaseIds(), dto.getExpirationDate());
         return ApiResponse.created(result);
+    }
+
+    @RequireRole({Role.ADMIN, Role.BOOK_OWNER})
+    @GetMapping("/{book-case-id}/books")
+    public ApiResponse<List<BookVO>> findBooksByBookCaseId(@PathVariable("book-case-id") Long bookCaseId) {
+        List<BookVO> result = bookService.findByBookCaseId(bookCaseId);
+        return ApiResponse.success(result);
     }
 
     @RequireRole(Role.ADMIN)
@@ -79,14 +89,5 @@ public class BookCaseController {
         List<Long> changedBookIds = bookCaseService.unOccupyProcess(bookCaseIds);
         return ApiResponse.success(changedBookIds);
     }
-
-
-
-
-
-
-
-
-
 
 }

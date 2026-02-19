@@ -14,4 +14,15 @@
         WHERE GROUP_CODE = #{groupCode} AND CODE_NAME = #{codeName}
     </select>
 
+    <select id="selectByGroupCodeAndCode" resultMap="commonCodeResultMap">
+        SELECT * FROM COMMON_CODE
+        WHERE GROUP_CODE = #{groupCode} AND CODE = #{code}
+    </select>
+
+    <select id="selectByGroupCode" resultMap="commonCodeResultMap">
+        SELECT * FROM COMMON_CODE
+        WHERE GROUP_CODE = #{groupCode}
+        ORDER BY CODE
+    </select>
+
 </mapper>

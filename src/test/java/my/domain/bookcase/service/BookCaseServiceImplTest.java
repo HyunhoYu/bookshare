@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,9 +55,9 @@ class BookCaseServiceImplTest {
         typeId = bookCaseTypeService.create(typeDto);
     }
 
-    private BookCaseCreateDto createDto(String locationName, long bookCaseTypeId) {
+    private BookCaseCreateDto createDto(String locationCode, long bookCaseTypeId) {
         BookCaseCreateDto dto = new BookCaseCreateDto();
-        dto.setLocationName(locationName);
+        dto.setLocationCode(locationCode);
         dto.setBookCaseTypeId(bookCaseTypeId);
         return dto;
     }
@@ -80,7 +81,7 @@ class BookCaseServiceImplTest {
     @Test
     @DisplayName("책장 등록 성공 - ID 반환")
     void addBookCase_success() {
-        BookCaseCreateDto dto = createDto("1층 A구역", typeId);
+        BookCaseCreateDto dto = createDto("01", typeId);
         long id = bookCaseService.create(dto);
         assertThat(id).isGreaterThan(0);
     }
@@ -88,7 +89,7 @@ class BookCaseServiceImplTest {
     @Test
     @DisplayName("책장 등록 후 ID로 조회 - 필드값 일치")
     void addBookCase_thenFindById() {
-        BookCaseCreateDto dto = createDto("1층 A구역", typeId);
+        BookCaseCreateDto dto = createDto("01", typeId);
         long id = bookCaseService.create(dto);
 
         BookCaseVO result = bookCaseService.findById(id);
@@ -102,8 +103,8 @@ class BookCaseServiceImplTest {
     @Test
     @DisplayName("여러 책장 등록 후 전체 조회")
     void addMultiple_thenFindAll() {
-        bookCaseService.create(createDto("1층 A구역", typeId));
-        bookCaseService.create(createDto("1층 B구역", typeId));
+        bookCaseService.create(createDto("01", typeId));
+        bookCaseService.create(createDto("02", typeId));
 
         List<BookCaseVO> list = bookCaseService.findAll();
 
@@ -113,7 +114,7 @@ class BookCaseServiceImplTest {
     @Test
     @DisplayName("존재하지 않는 book_case_type_id로 등록 시 예외 발생")
     void addBookCase_invalidTypeId_throwsException() {
-        BookCaseCreateDto dto = createDto("1층 A구역", 999999L);
+        BookCaseCreateDto dto = createDto("01", 999999L);
 
         assertThatThrownBy(() -> bookCaseService.create(dto))
                 .isInstanceOf(Exception.class);
@@ -131,8 +132,8 @@ class BookCaseServiceImplTest {
     @Test
     @DisplayName("책장 모두 비어있을 때 - 전부 이용 가능")
     void findUsableBookCases_allEmpty() {
-        long id1 = bookCaseService.create(createDto("1층 A구역", typeId));
-        long id2 = bookCaseService.create(createDto("1층 B구역", typeId));
+        long id1 = bookCaseService.create(createDto("01", typeId));
+        long id2 = bookCaseService.create(createDto("02", typeId));
 
         List<BookCaseVO> usable = bookCaseService.findUsable();
 
@@ -142,14 +143,16 @@ class BookCaseServiceImplTest {
     @Test
     @DisplayName("점유된 책장은 이용 가능 목록에서 제외")
     void findUsableBookCases_occupiedExcluded() {
-        long caseId1 = bookCaseService.create(createDto("1층 A구역", typeId));
-        long caseId2 = bookCaseService.create(createDto("1층 B구역", typeId));
+        long caseId1 = bookCaseService.create(createDto("01", typeId));
+        long caseId2 = bookCaseService.create(createDto("02", typeId));
 
         // caseId1을 점유
         BookOwnerVO owner = createBookOwner("usable-test@test.com");
         BookCaseOccupiedRecordVO record = new BookCaseOccupiedRecordVO();
         record.setBookCaseId(caseId1);
         record.setBookOwnerId(owner.getId());
+        record.setExpirationDate(LocalDate.now().plusMonths(3));
+        record.setDeposit(50000);
         occupiedRecordMapper.insert(record);
 
         List<BookCaseVO> usable = bookCaseService.findUsable();
@@ -162,13 +165,15 @@ class BookCaseServiceImplTest {
     @Test
     @DisplayName("점유 해제된 책장은 다시 이용 가능")
     void findUsableBookCases_releasedIncluded() {
-        long caseId = bookCaseService.create(createDto("1층 A구역", typeId));
+        long caseId = bookCaseService.create(createDto("01", typeId));
 
         // 점유
         BookOwnerVO owner = createBookOwner("release-test@test.com");
         BookCaseOccupiedRecordVO record = new BookCaseOccupiedRecordVO();
         record.setBookCaseId(caseId);
         record.setBookOwnerId(owner.getId());
+        record.setExpirationDate(LocalDate.now().plusMonths(3));
+        record.setDeposit(50000);
         occupiedRecordMapper.insert(record);
 
         // 점유 해제
@@ -182,8 +187,8 @@ class BookCaseServiceImplTest {
     @Test
     @DisplayName("전부 점유 중이면 빈 리스트 반환")
     void findUsableBookCases_allOccupied() {
-        long caseId1 = bookCaseService.create(createDto("1층 A구역", typeId));
-        long caseId2 = bookCaseService.create(createDto("1층 B구역", typeId));
+        long caseId1 = bookCaseService.create(createDto("01", typeId));
+        long caseId2 = bookCaseService.create(createDto("02", typeId));
 
         BookOwnerVO owner1 = createBookOwner("all-occ1@test.com");
         BookOwnerVO owner2 = createBookOwner("all-occ2@test.com");
@@ -191,11 +196,15 @@ class BookCaseServiceImplTest {
         BookCaseOccupiedRecordVO r1 = new BookCaseOccupiedRecordVO();
         r1.setBookCaseId(caseId1);
         r1.setBookOwnerId(owner1.getId());
+        r1.setExpirationDate(LocalDate.now().plusMonths(3));
+        r1.setDeposit(50000);
         occupiedRecordMapper.insert(r1);
 
         BookCaseOccupiedRecordVO r2 = new BookCaseOccupiedRecordVO();
         r2.setBookCaseId(caseId2);
         r2.setBookOwnerId(owner2.getId());
+        r2.setExpirationDate(LocalDate.now().plusMonths(3));
+        r2.setDeposit(50000);
         occupiedRecordMapper.insert(r2);
 
         List<BookCaseVO> usable = bookCaseService.findUsable();
@@ -209,10 +218,10 @@ class BookCaseServiceImplTest {
     @Test
     @DisplayName("점유 성공 - 빈 책장에 점유 시 레코드 생성")
     void occupy_success() {
-        long caseId = bookCaseService.create(createDto("1층 A구역", typeId));
+        long caseId = bookCaseService.create(createDto("01", typeId));
         BookOwnerVO owner = createBookOwner("occupy-success@test.com");
 
-        bookCaseService.occupy(owner.getId(), List.of(caseId));
+        bookCaseService.occupy(owner.getId(), List.of(caseId), LocalDate.now().plusMonths(3));
 
         assertThat(bookCaseService.isOccupied(caseId)).isTrue();
         BookCaseOccupiedRecordVO record = occupiedRecordMapper.selectCurrentByBookCaseId(caseId);
@@ -224,32 +233,32 @@ class BookCaseServiceImplTest {
     @Test
     @DisplayName("점유 실패 - 이미 점유 중인 책장에 점유 시 예외")
     void occupy_alreadyOccupied_throwsException() {
-        long caseId = bookCaseService.create(createDto("1층 A구역", typeId));
+        long caseId = bookCaseService.create(createDto("01", typeId));
         BookOwnerVO owner1 = createBookOwner("occupy-first@test.com");
         BookOwnerVO owner2 = createBookOwner("occupy-second@test.com");
 
-        bookCaseService.occupy(owner1.getId(), List.of(caseId));
+        bookCaseService.occupy(owner1.getId(), List.of(caseId), LocalDate.now().plusMonths(3));
 
-        assertThatThrownBy(() -> bookCaseService.occupy(owner2.getId(), List.of(caseId)))
+        assertThatThrownBy(() -> bookCaseService.occupy(owner2.getId(), List.of(caseId), LocalDate.now().plusMonths(3)))
                 .isInstanceOf(ApplicationException.class);
     }
 
     @Test
     @DisplayName("점유 해제 후 다른 사람이 점유 성공")
     void occupy_afterRelease_success() {
-        long caseId = bookCaseService.create(createDto("1층 A구역", typeId));
+        long caseId = bookCaseService.create(createDto("01", typeId));
         BookOwnerVO owner1 = createBookOwner("occupy-release1@test.com");
         BookOwnerVO owner2 = createBookOwner("occupy-release2@test.com");
 
         // owner1 점유
-        bookCaseService.occupy(owner1.getId(), List.of(caseId));
+        bookCaseService.occupy(owner1.getId(), List.of(caseId), LocalDate.now().plusMonths(3));
 
         // owner1 해제
         BookCaseOccupiedRecordVO record = occupiedRecordMapper.selectCurrentByBookCaseId(caseId);
         occupiedRecordMapper.updateUnOccupiedAt(record.getId());
 
         // owner2 점유 성공
-        bookCaseService.occupy(owner2.getId(), List.of(caseId));
+        bookCaseService.occupy(owner2.getId(), List.of(caseId), LocalDate.now().plusMonths(3));
 
         assertThat(bookCaseService.isOccupied(caseId)).isTrue();
         BookCaseOccupiedRecordVO current = occupiedRecordMapper.selectCurrentByBookCaseId(caseId);
@@ -259,11 +268,11 @@ class BookCaseServiceImplTest {
     @Test
     @DisplayName("점유 후 이용 가능 목록에서 제외됨")
     void occupy_thenNotInUsableList() {
-        long caseId1 = bookCaseService.create(createDto("1층 A구역", typeId));
-        long caseId2 = bookCaseService.create(createDto("1층 B구역", typeId));
+        long caseId1 = bookCaseService.create(createDto("01", typeId));
+        long caseId2 = bookCaseService.create(createDto("02", typeId));
         BookOwnerVO owner = createBookOwner("occupy-usable@test.com");
 
-        bookCaseService.occupy(owner.getId(), List.of(caseId1));
+        bookCaseService.occupy(owner.getId(), List.of(caseId1), LocalDate.now().plusMonths(3));
 
         List<BookCaseVO> usable = bookCaseService.findUsable();
         assertThat(usable).extracting(BookCaseVO::getId)
@@ -276,7 +285,7 @@ class BookCaseServiceImplTest {
     void occupy_bookCaseNotFound_throwsException() {
         BookOwnerVO owner = createBookOwner("occupy-notfound@test.com");
 
-        assertThatThrownBy(() -> bookCaseService.occupy(owner.getId(), List.of(999999L)))
+        assertThatThrownBy(() -> bookCaseService.occupy(owner.getId(), List.of(999999L), LocalDate.now().plusMonths(3)))
                 .isInstanceOf(ApplicationException.class);
     }
 }

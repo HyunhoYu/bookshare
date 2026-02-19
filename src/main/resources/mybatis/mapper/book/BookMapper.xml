@@ -33,8 +33,8 @@
         <selectKey keyProperty="id" resultType="long" order="AFTER">
             SELECT "ISEQ$$_78230".CURRVAL FROM DUAL
         </selectKey>
-        INSERT INTO BOOK (BOOK_OWNER_ID, BOOK_CASE_ID, BOOK_NAME, PUBLISHER_HOUSE, PRICE, ENTERED_AT, COMMON_CODE_ID, STATE)
-        VALUES (#{bookOwnerId}, #{bookCaseId}, #{bookName}, #{publisherHouse}, #{price}, SYSDATE, #{commonCodeId}, #{state})
+        INSERT INTO BOOK (BOOK_OWNER_ID, BOOK_CASE_ID, BOOK_NAME, PUBLISHER_HOUSE, PRICE, ENTERED_AT, GROUP_CODE_ID, COMMON_CODE_ID, STATE)
+        VALUES (#{bookOwnerId}, #{bookCaseId}, #{bookName}, #{publisherHouse}, #{price}, SYSDATE, #{groupCodeId}, #{commonCodeId}, #{state})
     </insert>
 
     <select id="selectById" parameterType="long" resultMap="bookResultMap">
@@ -98,6 +98,30 @@
         </foreach>
         AND STATE = #{state}
         AND DELETED_AT IS NULL
+    </select>
+
+    <select id="selectAllWithBookCase" resultType="my.domain.book.BookWithBookCaseVO">
+        SELECT B.ID,
+               B.BOOK_OWNER_ID,
+               B.BOOK_CASE_ID,
+               B.BOOK_NAME,
+               B.PUBLISHER_HOUSE,
+               B.PRICE,
+               B.ENTERED_AT,
+               B.GROUP_CODE_ID AS BOOK_GROUP_CODE_ID,
+               B.COMMON_CODE_ID AS BOOK_COMMON_CODE_ID,
+               B.STATE,
+               BC.GROUP_CODE_ID AS BOOK_CASE_GROUP_CODE_ID,
+               BC.COMMON_CODE_ID AS BOOK_CASE_COMMON_CODE_ID,
+               BC.BOOK_CASE_TYPE_ID
+        FROM BOOK B
+        JOIN BOOK_CASE BC ON B.BOOK_CASE_ID = BC.ID
+        WHERE B.DELETED_AT IS NULL
+        <if test="state != null">AND B.STATE = #{state}</if>
+    </select>
+
+    <select id="selectByBookCaseId" parameterType="long" resultMap="bookResultMap">
+        SELECT * FROM BOOK WHERE BOOK_CASE_ID = #{bookCaseId} AND DELETED_AT IS NULL
     </select>
 
 </mapper>

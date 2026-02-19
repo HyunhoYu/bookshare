@@ -19,5 +19,7 @@ public interface BookMapper {
     int updateStateNormalToRetrieve(List<Long>bookIds);
     int softDeleteBooks(@Param("bookIds") List<Long> bookIds);
     int countByIdsAndState(@Param("bookIds") List<Long> bookIds, @Param("state") String state);
+    List<BookWithBookCaseVO> selectAllWithBookCase(@Param("state") String state);
+    List<BookVO> selectByBookCaseId(Long bookCaseId);
 
 }

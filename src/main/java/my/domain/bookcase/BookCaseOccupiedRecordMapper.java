@@ -16,4 +16,5 @@ public interface BookCaseOccupiedRecordMapper {
     int countCurrentOccupied(long bookCaseId);
     int unOccupyBookCases(@Param("bookCaseIds") List<Long> bookCaseIds);
     List<BookCaseOccupiedRecordVO> selectOccupiedRecordByIds(@Param("occupiedRecordIds") List<Long> occupiedRecordIds);
+    List<BookCaseVO> selectBookCasesByOwnerId(long id);
 }

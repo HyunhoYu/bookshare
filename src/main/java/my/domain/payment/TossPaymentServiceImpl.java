@@ -6,6 +6,7 @@ import my.common.exception.ErrorCode;
 import my.domain.payment.dto.TossTransferRequestDto;
 import my.domain.payment.dto.TossTransferResponseDto;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -14,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+@Profile("!dev")
 @Slf4j
 @Service
 public class TossPaymentServiceImpl implements TossPaymentService {

@@ -26,6 +26,6 @@ public class BookRegisterDto {
 
     private BookState bookState;
 
-    @NotBlank(message = "책 분류는 필수입니다")
-    private String bookType;
+    @NotBlank(message = "책 분류 코드는 필수입니다")
+    private String bookTypeCode;
 }

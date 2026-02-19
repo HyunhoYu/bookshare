@@ -15,7 +15,12 @@
       "Bash(npx tsc:*)",
       "Bash(cmd.exe:*)",
       "Bash(npx vite build)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)",
+      "Bash(curl:*)",
+      "Bash(npm run build:*)",
+      "WebFetch(domain:www.tosspayments.com)"
     ]
   }
 }

@@ -9,14 +9,16 @@
         <result property="bookOwnerId" column="BOOK_OWNER_ID"/>
         <result property="occupiedAt" column="OCCUPIED_AT"/>
         <result property="unOccupiedAt" column="UN_OCCUPIED_AT"/>
+        <result property="expirationDate" column="EXPIRATION_DATE"/>
+        <result property="deposit" column="DEPOSIT"/>
     </resultMap>
 
     <insert id="insert" parameterType="my.domain.bookcase.BookCaseOccupiedRecordVO">
         <selectKey keyProperty="id" resultType="long" order="AFTER">
             SELECT "ISEQ$$_78234".CURRVAL FROM DUAL
         </selectKey>
-        INSERT INTO BOOK_CASE_OCCUPIED_RECORD (BOOK_CASE_ID, BOOK_OWNER_ID, OCCUPIED_AT)
-        VALUES (#{bookCaseId}, #{bookOwnerId}, SYSTIMESTAMP)
+        INSERT INTO BOOK_CASE_OCCUPIED_RECORD (BOOK_CASE_ID, BOOK_OWNER_ID, OCCUPIED_AT, EXPIRATION_DATE, DEPOSIT)
+        VALUES (#{bookCaseId}, #{bookOwnerId}, SYSTIMESTAMP, #{expirationDate}, #{deposit})
     </insert>
 
     <select id="selectById" parameterType="long" resultMap="occupiedRecordResultMap">
@@ -69,7 +71,14 @@
     </update>
 
 
+    <!-- 책소유주 id로 현재 점유중인 책장 리스트 조회    -->
 
-
+    <select id="selectBookCasesByOwnerId" parameterType="long" resultType="my.domain.bookcase.BookCaseVO">
+        SELECT BC.*
+        FROM BOOK_CASE BC
+        JOIN BOOK_CASE_OCCUPIED_RECORD BCOR
+        ON BC.ID = BCOR.BOOK_CASE_ID
+        WHERE BCOR.UN_OCCUPIED_AT IS NULL AND BCOR.BOOK_OWNER_ID = #{id}
+    </select>
 
 </mapper>

@@ -8,8 +8,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class BookCaseCreateDto {
-    @NotBlank(message = "위치명은 필수입니다")
-    private String locationName;
+    @NotBlank(message = "위치 코드는 필수입니다")
+    private String locationCode;
 
     @NotNull(message = "책장 타입 ID는 필수입니다")
     private Long bookCaseTypeId;

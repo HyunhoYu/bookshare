@@ -1,10 +1,12 @@
 package my.domain.bookcase;
 
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -15,4 +17,8 @@ public class OccupyRequestDto {
 
     @NotEmpty(message = "책장 목록은 비어있을 수 없습니다")
     private List<Long> bookCaseIds;
+
+    @NotNull
+    @Future
+    private LocalDate expirationDate;
 }

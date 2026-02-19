@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -68,7 +69,7 @@ class UnOccupyProcessTest {
 
     private long createBookCase() {
         BookCaseCreateDto caseDto = new BookCaseCreateDto();
-        caseDto.setLocationName("1층 A구역");
+        caseDto.setLocationCode("01");
         caseDto.setBookCaseTypeId(typeId);
         return bookCaseService.create(caseDto);
     }
@@ -98,7 +99,7 @@ class UnOccupyProcessTest {
             dto.setBookName("Book" + uniqueCode());
             dto.setPublisherHouse("Publisher");
             dto.setPrice(10000 + i * 5000);
-            dto.setBookType("과학");
+            dto.setBookTypeCode("04");
             dtos.add(dto);
         }
         return bookCaseService.registerBooks(bookCaseId, dtos);
@@ -125,7 +126,7 @@ class UnOccupyProcessTest {
         void unOccupy_single_booksChangeState() {
             long bookCaseId = createBookCase();
             BookOwnerVO owner = createBookOwner();
-            bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
             List<BookVO> books = registerBooks(bookCaseId, owner, 2);
 
             List<Long> changedBookIds = bookCaseService.unOccupyProcess(List.of(bookCaseId));
@@ -145,8 +146,8 @@ class UnOccupyProcessTest {
             BookOwnerVO owner1 = createBookOwner();
             BookOwnerVO owner2 = createBookOwner();
 
-            bookCaseService.occupy(owner1.getId(), List.of(caseId1));
-            bookCaseService.occupy(owner2.getId(), List.of(caseId2));
+            bookCaseService.occupy(owner1.getId(), List.of(caseId1), LocalDate.now().plusMonths(3));
+            bookCaseService.occupy(owner2.getId(), List.of(caseId2), LocalDate.now().plusMonths(3));
             registerBooks(caseId1, owner1, 1);
             registerBooks(caseId2, owner2, 2);
 
@@ -164,7 +165,7 @@ class UnOccupyProcessTest {
         void unOccupy_bookCaseBecomesUsable() {
             long bookCaseId = createBookCase();
             BookOwnerVO owner = createBookOwner();
-            bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
 
             bookCaseService.unOccupyProcess(List.of(bookCaseId));
 
@@ -178,7 +179,7 @@ class UnOccupyProcessTest {
         void unOccupy_allBooksSold_returnsEmpty() {
             long bookCaseId = createBookCase();
             BookOwnerVO owner = createBookOwner();
-            bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
             List<BookVO> books = registerBooks(bookCaseId, owner, 1);
 
             Long customerId = createCustomer();
@@ -198,7 +199,7 @@ class UnOccupyProcessTest {
         void unOccupy_noBooks_returnsEmpty() {
             long bookCaseId = createBookCase();
             BookOwnerVO owner = createBookOwner();
-            bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
 
             List<Long> changedBookIds = bookCaseService.unOccupyProcess(List.of(bookCaseId));
 
@@ -210,7 +211,7 @@ class UnOccupyProcessTest {
         void unOccupy_mixedStates_onlyNormalChanged() {
             long bookCaseId = createBookCase();
             BookOwnerVO owner = createBookOwner();
-            bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
             List<BookVO> books = registerBooks(bookCaseId, owner, 2);
 
             Long customerId = createCustomer();

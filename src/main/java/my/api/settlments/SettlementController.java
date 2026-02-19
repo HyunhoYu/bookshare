@@ -21,6 +21,20 @@ public class SettlementController {
     private final SettlementService settlementService;
 
     @RequireRole(Role.ADMIN)
+    @GetMapping
+    public ApiResponse<List<SettlementVO>> findAll() {
+        List<SettlementVO> settlements = settlementService.findAll();
+        return ApiResponse.success(settlements);
+    }
+
+    @RequireRole(Role.ADMIN)
+    @GetMapping("/completed")
+    public ApiResponse<List<SettlementVO>> findAllCompleted() {
+        List<SettlementVO> settlements = settlementService.findAll();
+        return ApiResponse.success(settlements);
+    }
+
+    @RequireRole(Role.ADMIN)
     @GetMapping("/pending")
     public ApiResponse<List<BookSoldRecordVO>> findAllUnsettled() {
         List<BookSoldRecordVO> unsettled = settlementService.findAllUnsettled();
@@ -32,5 +46,12 @@ public class SettlementController {
     public ApiResponse<SettlementVO> settle(@RequestBody @Valid SettlementRequestDto requestDto) {
         SettlementVO settlement = settlementService.settle(requestDto);
         return ApiResponse.created(settlement);
+    }
+
+    @RequireRole(Role.ADMIN)
+    @PostMapping("/batch")
+    public ApiResponse<List<SettlementVO>> settleAll() {
+        List<SettlementVO> results = settlementService.settleAll();
+        return ApiResponse.created(results);
     }
 }

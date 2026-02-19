@@ -51,4 +51,14 @@ public class BookServiceImpl implements BookService {
         return bookIds;
     }
 
+    @Override
+    public List<BookWithBookCaseVO> findAllWithBookCase(String state) {
+        return bookMapper.selectAllWithBookCase(state);
+    }
+
+    @Override
+    public List<BookVO> findByBookCaseId(Long bookCaseId) {
+        return bookMapper.selectByBookCaseId(bookCaseId);
+    }
+
 }

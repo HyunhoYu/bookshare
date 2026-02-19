@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,7 +54,7 @@ class BookCaseOccupiedRecordMapperTest {
 
         // 책장 생성
         BookCaseCreateDto caseDto = new BookCaseCreateDto();
-        caseDto.setLocationName("1층 A구역");
+        caseDto.setLocationCode("01");
         caseDto.setBookCaseTypeId(typeId);
         bookCaseId = bookCaseService.create(caseDto);
 
@@ -77,6 +78,8 @@ class BookCaseOccupiedRecordMapperTest {
         BookCaseOccupiedRecordVO record = new BookCaseOccupiedRecordVO();
         record.setBookCaseId(bookCaseId);
         record.setBookOwnerId(bookOwnerId);
+        record.setExpirationDate(LocalDate.now().plusMonths(3));
+        record.setDeposit(30000);
 
         int result = occupiedRecordMapper.insert(record);
 
@@ -90,6 +93,8 @@ class BookCaseOccupiedRecordMapperTest {
         BookCaseOccupiedRecordVO record = new BookCaseOccupiedRecordVO();
         record.setBookCaseId(bookCaseId);
         record.setBookOwnerId(bookOwnerId);
+        record.setExpirationDate(LocalDate.now().plusMonths(3));
+        record.setDeposit(30000);
         occupiedRecordMapper.insert(record);
 
         BookCaseOccupiedRecordVO current = occupiedRecordMapper.selectCurrentByBookCaseId(bookCaseId);
@@ -114,6 +119,8 @@ class BookCaseOccupiedRecordMapperTest {
         BookCaseOccupiedRecordVO record = new BookCaseOccupiedRecordVO();
         record.setBookCaseId(bookCaseId);
         record.setBookOwnerId(bookOwnerId);
+        record.setExpirationDate(LocalDate.now().plusMonths(3));
+        record.setDeposit(30000);
         occupiedRecordMapper.insert(record);
 
         // 점유 해제
@@ -135,18 +142,22 @@ class BookCaseOccupiedRecordMapperTest {
         long typeId2 = bookCaseTypeService.create(typeDto2);
 
         BookCaseCreateDto case2Dto = new BookCaseCreateDto();
-        case2Dto.setLocationName("1층 B구역");
+        case2Dto.setLocationCode("02");
         case2Dto.setBookCaseTypeId(typeId2);
         long bookCaseId2 = bookCaseService.create(case2Dto);
 
         BookCaseOccupiedRecordVO r1 = new BookCaseOccupiedRecordVO();
         r1.setBookCaseId(bookCaseId);
         r1.setBookOwnerId(bookOwnerId);
+        r1.setExpirationDate(LocalDate.now().plusMonths(3));
+        r1.setDeposit(30000);
         occupiedRecordMapper.insert(r1);
 
         BookCaseOccupiedRecordVO r2 = new BookCaseOccupiedRecordVO();
         r2.setBookCaseId(bookCaseId2);
         r2.setBookOwnerId(bookOwnerId);
+        r2.setExpirationDate(LocalDate.now().plusMonths(3));
+        r2.setDeposit(40000);
         occupiedRecordMapper.insert(r2);
 
         List<BookCaseOccupiedRecordVO> history = occupiedRecordMapper.selectByBookOwnerId(bookOwnerId);
@@ -162,6 +173,8 @@ class BookCaseOccupiedRecordMapperTest {
         BookCaseOccupiedRecordVO r1 = new BookCaseOccupiedRecordVO();
         r1.setBookCaseId(bookCaseId);
         r1.setBookOwnerId(bookOwnerId);
+        r1.setExpirationDate(LocalDate.now().plusMonths(3));
+        r1.setDeposit(30000);
         occupiedRecordMapper.insert(r1);
 
         // 2. 해제
@@ -184,6 +197,8 @@ class BookCaseOccupiedRecordMapperTest {
         BookCaseOccupiedRecordVO r2 = new BookCaseOccupiedRecordVO();
         r2.setBookCaseId(bookCaseId);
         r2.setBookOwnerId(owner2.getId());
+        r2.setExpirationDate(LocalDate.now().plusMonths(3));
+        r2.setDeposit(30000);
         occupiedRecordMapper.insert(r2);
 
         // 현재 점유자는 owner2

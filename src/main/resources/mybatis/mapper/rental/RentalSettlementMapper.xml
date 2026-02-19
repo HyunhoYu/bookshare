@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.rental.RentalSettlementMapper">
+
+    <resultMap id="rentalSettlementResultMap" type="my.domain.rental.RentalSettlementVO">
+        <id property="id" column="ID"/>
+        <result property="occupiedRecordId" column="OCCUPIED_RECORD_ID"/>
+        <result property="bookOwnerId" column="BOOK_OWNER_ID"/>
+        <result property="targetMonth" column="TARGET_MONTH"/>
+        <result property="amount" column="AMOUNT"/>
+        <result property="status" column="STATUS"/>
+        <result property="deductedAmount" column="DEDUCTED_AMOUNT"/>
+        <result property="remainingAmount" column="REMAINING_AMOUNT"/>
+        <result property="paidAt" column="PAID_AT"/>
+        <result property="createdAt" column="CREATED_AT"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="my.domain.rental.RentalSettlementVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78284".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO RENTAL_SETTLEMENT (OCCUPIED_RECORD_ID, BOOK_OWNER_ID, TARGET_MONTH, AMOUNT, STATUS, REMAINING_AMOUNT)
+        VALUES (#{occupiedRecordId}, #{bookOwnerId}, #{targetMonth}, #{amount}, 'UNPAID', #{amount})
+    </insert>
+
+    <sql id="detailSelect">
+        SELECT RS.ID,
+               RS.OCCUPIED_RECORD_ID,
+               RS.BOOK_OWNER_ID,
+               RS.TARGET_MONTH,
+               RS.AMOUNT,
+               RS.STATUS,
+               RS.DEDUCTED_AMOUNT,
+               RS.REMAINING_AMOUNT,
+               RS.PAID_AT,
+               RS.CREATED_AT,
+               BCOR.BOOK_CASE_ID,
+               BC.COMMON_CODE_ID AS LOCATION_CODE,
+               CC.CODE_NAME AS LOCATION_NAME,
+               BCT.CODE AS BOOK_CASE_TYPE_CODE
+        FROM RENTAL_SETTLEMENT RS
+        JOIN BOOK_CASE_OCCUPIED_RECORD BCOR ON RS.OCCUPIED_RECORD_ID = BCOR.ID
+        JOIN BOOK_CASE BC ON BCOR.BOOK_CASE_ID = BC.ID
+        JOIN COMMON_CODE CC ON CC.GROUP_CODE = BC.GROUP_CODE_ID AND CC.CODE = BC.COMMON_CODE_ID
+        JOIN BOOK_CASE_TYPE BCT ON BCT.ID = BC.BOOK_CASE_TYPE_ID
+    </sql>
+
+    <select id="selectAllDetail" resultType="my.domain.rental.RentalSettlementDetailVO">
+        <include refid="detailSelect"/>
+        ORDER BY RS.TARGET_MONTH DESC, RS.ID
+    </select>
+
+    <select id="selectDetailByBookOwnerId" parameterType="long" resultType="my.domain.rental.RentalSettlementDetailVO">
+        <include refid="detailSelect"/>
+        WHERE RS.BOOK_OWNER_ID = #{bookOwnerId}
+        ORDER BY RS.TARGET_MONTH DESC, RS.ID
+    </select>
+
+    <select id="selectById" parameterType="long" resultMap="rentalSettlementResultMap">
+        SELECT * FROM RENTAL_SETTLEMENT WHERE ID = #{id}
+    </select>
+
+    <update id="updateStatusPaid" parameterType="long">
+        UPDATE RENTAL_SETTLEMENT
+        SET STATUS = 'PAID', PAID_AT = SYSTIMESTAMP
+        WHERE ID = #{id} AND STATUS = 'UNPAID'
+    </update>
+
+    <select id="selectUnpaidByBookOwnerId" parameterType="long" resultMap="rentalSettlementResultMap">
+        SELECT * FROM RENTAL_SETTLEMENT
+        WHERE BOOK_OWNER_ID = #{bookOwnerId} AND STATUS = 'UNPAID' AND REMAINING_AMOUNT > 0
+        ORDER BY TARGET_MONTH ASC, ID ASC
+    </select>
+
+    <update id="updateDeducted">
+        UPDATE RENTAL_SETTLEMENT
+        SET DEDUCTED_AMOUNT = #{deductedAmount},
+            REMAINING_AMOUNT = #{remainingAmount},
+            STATUS = #{status},
+            PAID_AT = CASE WHEN #{status} = 'PAID' THEN SYSTIMESTAMP ELSE PAID_AT END
+        WHERE ID = #{id}
+    </update>
+
+</mapper>

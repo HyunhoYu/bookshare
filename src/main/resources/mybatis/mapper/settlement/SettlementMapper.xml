@@ -12,32 +12,45 @@
         <result property="storeAmount" column="STORE_AMOUNT"/>
         <result property="payoutKey" column="PAYOUT_KEY"/>
         <result property="transferStatus" column="TRANSFER_STATUS"/>
+        <result property="deductedRentalAmount" column="DEDUCTED_RENTAL_AMOUNT"/>
+        <result property="actualPayoutAmount" column="ACTUAL_PAYOUT_AMOUNT"/>
     </resultMap>
 
-    <select id="selectById" parameterType="long" resultMap="settlementResultMap">
-        SELECT *
-        FROM BOOK_OWNER_SETTLEMENT
-        WHERE ID = #{id}
+    <sql id="settlementDetailSelect">
+        SELECT S.ID, S.BOOK_OWNER_ID, S.SETTLED_AT, S.TOTAL_AMOUNT,
+               S.OWNER_AMOUNT, S.STORE_AMOUNT, S.PAYOUT_KEY, S.TRANSFER_STATUS,
+               S.DEDUCTED_RENTAL_AMOUNT, S.ACTUAL_PAYOUT_AMOUNT,
+               U.NAME AS BOOK_OWNER_NAME
+        FROM BOOK_OWNER_SETTLEMENT S
+        JOIN USERS U ON S.BOOK_OWNER_ID = U.ID
+    </sql>
+
+    <select id="selectAll" resultType="my.domain.settlement.vo.SettlementVO">
+        <include refid="settlementDetailSelect"/>
+        ORDER BY S.SETTLED_AT DESC
     </select>
 
-    <select id="selectAllByBookOwnerId" parameterType="long" resultMap="settlementResultMap">
-        SELECT *
-        FROM BOOK_OWNER_SETTLEMENT
-        WHERE BOOK_OWNER_ID = #{id}
+    <select id="selectById" parameterType="long" resultType="my.domain.settlement.vo.SettlementVO">
+        <include refid="settlementDetailSelect"/>
+        WHERE S.ID = #{id}
     </select>
 
-    <select id="selectSettledByBookOwnerId" parameterType="long" resultMap="settlementResultMap">
-        SELECT *
-        FROM BOOK_OWNER_SETTLEMENT
-        WHERE BOOK_OWNER_ID = #{id} AND SETTLED_AT IS NOT NULL
+    <select id="selectAllByBookOwnerId" parameterType="long" resultType="my.domain.settlement.vo.SettlementVO">
+        <include refid="settlementDetailSelect"/>
+        WHERE S.BOOK_OWNER_ID = #{id}
+    </select>
+
+    <select id="selectSettledByBookOwnerId" parameterType="long" resultType="my.domain.settlement.vo.SettlementVO">
+        <include refid="settlementDetailSelect"/>
+        WHERE S.BOOK_OWNER_ID = #{id} AND S.SETTLED_AT IS NOT NULL
     </select>
 
     <insert id="insert" parameterType="my.domain.settlement.vo.SettlementVO">
         <selectKey keyProperty="id" resultType="long" order="AFTER">
             SELECT "ISEQ$$_78238".CURRVAL FROM DUAL
         </selectKey>
-        INSERT INTO BOOK_OWNER_SETTLEMENT (BOOK_OWNER_ID, SETTLED_AT, TOTAL_AMOUNT, OWNER_AMOUNT, STORE_AMOUNT, PAYOUT_KEY, TRANSFER_STATUS)
-        VALUES (#{bookOwnerId}, SYSTIMESTAMP, #{totalAmount}, #{ownerAmount}, #{storeAmount}, #{payoutKey, jdbcType=VARCHAR}, #{transferStatus})
+        INSERT INTO BOOK_OWNER_SETTLEMENT (BOOK_OWNER_ID, SETTLED_AT, TOTAL_AMOUNT, OWNER_AMOUNT, STORE_AMOUNT, PAYOUT_KEY, TRANSFER_STATUS, DEDUCTED_RENTAL_AMOUNT, ACTUAL_PAYOUT_AMOUNT)
+        VALUES (#{bookOwnerId}, SYSTIMESTAMP, #{totalAmount}, #{ownerAmount}, #{storeAmount}, #{payoutKey, jdbcType=VARCHAR}, #{transferStatus}, #{deductedRentalAmount}, #{actualPayoutAmount})
     </insert>
 
 </mapper>

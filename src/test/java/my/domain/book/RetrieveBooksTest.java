@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,7 +54,7 @@ class RetrieveBooksTest {
         long typeId = bookCaseTypeService.create(typeDto);
 
         BookCaseCreateDto caseDto = new BookCaseCreateDto();
-        caseDto.setLocationName("1층 A구역");
+        caseDto.setLocationCode("01");
         caseDto.setBookCaseTypeId(typeId);
         bookCaseId = bookCaseService.create(caseDto);
 
@@ -66,7 +67,7 @@ class RetrieveBooksTest {
                 .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
     }
 
     private List<BookVO> registerBooks(int count) {
@@ -78,7 +79,7 @@ class RetrieveBooksTest {
             dto.setBookName("Book" + uniqueCode());
             dto.setPublisherHouse("Publisher");
             dto.setPrice(10000 + i * 5000);
-            dto.setBookType("과학");
+            dto.setBookTypeCode("04");
             dtos.add(dto);
         }
         return bookCaseService.registerBooks(bookCaseId, dtos);

@@ -8,6 +8,7 @@ import java.util.List;
 @Mapper
 public interface SettlementMapper {
 
+    List<SettlementVO> selectAll();
     List<SettlementVO> selectAllByBookOwnerId(Long bookOwnerId);
     List<SettlementVO> selectSettledByBookOwnerId(Long bookOwnerId);
     SettlementVO selectById(Long id);

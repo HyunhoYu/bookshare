@@ -1,5 +1,6 @@
 package my.domain.bookcase;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import lombok.Getter;
@@ -13,4 +14,8 @@ public class BookCaseOccupiedRecordVO {
     private Long bookOwnerId;
     private LocalDateTime occupiedAt;
     private LocalDateTime unOccupiedAt;
+    private LocalDate expirationDate;
+    private int deposit;
+
 }
+

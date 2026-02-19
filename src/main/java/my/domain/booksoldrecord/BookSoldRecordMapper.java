@@ -22,4 +22,5 @@ public interface BookSoldRecordMapper {
     int countAlreadySettled(@Param("ids") List<Long> ids);
     int updateSettlementId(@Param("settlementId") Long settlementId, @Param("ids") List<Long> ids);
     Map<String, Object> sumAmountsByIds(@Param("ids") List<Long> ids);
+    List<Long> selectUnsettledBookOwnerIds();
 }

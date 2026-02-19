@@ -51,6 +51,10 @@ public enum ErrorCode {
     ADDRESS_INSERT_FAIL("주소 저장 실패", 500),
     SETTLEMENT_AMOUNT_ZERO("정산 금액이 0원입니다", 400),
     BANK_CODE_NOT_FOUND("은행 코드를 찾을 수 없습니다", 400),
+    INVALID_BUY_TYPE("존재하지 않는 구매 유형 코드입니다", 400),
+    RENTAL_SETTLEMENT_INSERT_FAIL("임대료 정산 레코드 생성 실패", 500),
+    RENTAL_SETTLEMENT_NOT_FOUND("존재하지 않는 임대료 정산 레코드입니다", 404),
+    RENTAL_SETTLEMENT_ALREADY_PAID("이미 납부된 임대료입니다", 409),
     ;
 
     private final String message;

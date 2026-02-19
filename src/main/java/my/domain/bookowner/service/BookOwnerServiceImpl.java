@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import my.domain.book.BookMapper;
 import my.domain.book.BookService;
 import my.domain.book.BookVO;
+import my.domain.bookcase.BookCaseOccupiedRecordMapper;
+import my.domain.bookcase.BookCaseVO;
 import my.domain.bookowner.BookOwnerMapper;
 import my.domain.bookowner.vo.BookOwnerVO;
 import my.domain.booksoldrecord.vo.BookSoldRecordVO;
@@ -20,6 +22,7 @@ public class BookOwnerServiceImpl implements BookOwnerService{
     private final BookOwnerMapper bookOwnerMapper;
     private final BookService bookService;
     private final SettlementService settlementService;
+    private final BookCaseOccupiedRecordMapper occupiedRecordMapper;
 
     @Override
     public BookOwnerVO findById(Long id) {
@@ -54,5 +57,10 @@ public class BookOwnerServiceImpl implements BookOwnerService{
     @Override
     public List<BookSoldRecordVO> findMyUnSettled(Long bookOwnerId) {
         return settlementService.findUnSettled(bookOwnerId);
+    }
+
+    @Override
+    public List<BookCaseVO> findMyBookCases(Long ownerId) {
+        return occupiedRecordMapper.selectBookCasesByOwnerId(ownerId);
     }
 }

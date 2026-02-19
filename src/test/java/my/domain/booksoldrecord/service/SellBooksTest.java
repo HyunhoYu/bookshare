@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -81,7 +82,7 @@ class SellBooksTest {
 
         // 책장 생성
         BookCaseCreateDto caseDto = new BookCaseCreateDto();
-        caseDto.setLocationName("1층 A구역");
+        caseDto.setLocationCode("01");
         caseDto.setBookCaseTypeId(typeId);
         long bookCaseId = bookCaseService.create(caseDto);
 
@@ -98,7 +99,7 @@ class SellBooksTest {
                 .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
 
         // 책 등록
         BookRegisterDto bookDto = new BookRegisterDto();
@@ -107,7 +108,7 @@ class SellBooksTest {
         bookDto.setBookName("이펙티브 자바");
         bookDto.setPublisherHouse("인사이트");
         bookDto.setPrice(36000);
-        bookDto.setBookType("과학");
+        bookDto.setBookTypeCode("04");
 
         List<BookVO> books = bookCaseService.registerBooks(bookCaseId, List.of(bookDto));
         bookId = books.get(0).getId();

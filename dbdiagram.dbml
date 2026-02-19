@@ -1,0 +1,296 @@
+// BookShare DB Schema
+// Generated from MyBatis mappers + VO classes + CLAUDE.md
+
+// ============================================================
+// COMMON_CODE (GROUP_CODE 테이블 포함)
+// ============================================================
+
+Table COMMON_CODE {
+  GROUP_CODE VARCHAR2(50) [not null, note: 'LOCATION / BOOK_TYPE / BUY_TYPE']
+  CODE VARCHAR2(10) [not null]
+  CODE_NAME VARCHAR2(100)
+
+  indexes {
+    (GROUP_CODE, CODE) [pk]
+  }
+
+  Note: '''
+  공통 코드 마스터.
+  복합 PK (GROUP_CODE, CODE).
+  LOCATION: 01(1층 A구역), 02(1층 B구역), 03(2층 A구역)
+  BOOK_TYPE: 01~10 (소설, 역사, 스포츠, 과학, 자기계발, 경제/경영, 에세이, 만화, 외국문학, 기타)
+  BUY_TYPE: 01~05 (신용카드, 현금, 체크카드, 계좌이체, 간편결제)
+  '''
+}
+
+// ============================================================
+// USERS (소프트 삭제 지원)
+// ============================================================
+
+Table USERS {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78221']
+  ROLE VARCHAR2(20) [note: 'ADMIN / BOOK_OWNER / CUSTOMER / EMPLOYEE']
+  NAME VARCHAR2(100) [not null]
+  PHONE VARCHAR2(20) [not null]
+  EMAIL VARCHAR2(100) [not null]
+  RESIDENT_NUMBER VARCHAR2(20) [not null]
+  PASSWORD VARCHAR2(200) [not null]
+  DELETED_AT TIMESTAMP [note: 'NULL이면 활성 (소프트 삭제)']
+
+  indexes {
+    (EMAIL) [name: 'UQ_USERS_EMAIL', note: 'Conditional unique: DELETED_AT IS NULL인 행만']
+  }
+
+  Note: '''
+  사용자 테이블 (ADMIN, BOOK_OWNER, CUSTOMER, EMPLOYEE 공용).
+  소프트 삭제: DELETED_AT IS NULL인 행만 활성.
+  조건부 Unique Index: DELETED_AT IS NULL인 경우에만 EMAIL 유일성 보장.
+  '''
+}
+
+// ============================================================
+// CUSTOMER (USERS 1:1 서브타입)
+// ============================================================
+
+Table CUSTOMER {
+  ID NUMBER [pk, ref: - USERS.ID, note: 'USERS.ID 참조 (1:1)']
+
+  Note: '고객 서브타입 테이블. USERS에서 ROLE=CUSTOMER인 사용자와 1:1.'
+}
+
+// ============================================================
+// BOOK_OWNER (USERS 1:1 서브타입)
+// ============================================================
+
+Table BOOK_OWNER {
+  ID NUMBER [pk, ref: - USERS.ID, note: 'USERS.ID 참조 (1:1)']
+
+  Note: '책소유주 서브타입 테이블. USERS에서 ROLE=BOOK_OWNER인 사용자와 1:1.'
+}
+
+// ============================================================
+// ADDRESS (USERS 1:1)
+// ============================================================
+
+Table ADDRESS {
+  ID NUMBER [pk, ref: - USERS.ID, note: 'USERS.ID 참조 (1:1)']
+  CITY VARCHAR2(100)
+  LOAD_ADDR VARCHAR2(200)
+  SPECIFIC_ADDR VARCHAR2(200)
+
+  Note: '사용자 주소. USERS와 1:1 관계.'
+}
+
+// ============================================================
+// BANK_ACCOUNT (BOOK_OWNER 1:1)
+// ============================================================
+
+Table BANK_ACCOUNT {
+  BOOK_OWNER_ID NUMBER [pk, ref: - BOOK_OWNER.ID, note: 'BOOK_OWNER.ID 참조 (1:1)']
+  ACCOUNT_NUMBER VARCHAR2(50) [not null]
+  BANK_NAME VARCHAR2(50) [not null, note: 'BankCodeResolver 등록 한글 은행명']
+  BANK_CODE VARCHAR2(10) [note: '2자리 은행 코드']
+
+  Note: '책소유주 계좌 정보. BOOK_OWNER와 1:1 관계.'
+}
+
+// ============================================================
+// SETTLEMENT_RATIO (정산 비율)
+// ============================================================
+
+Table SETTLEMENT_RATIO {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_77702']
+  OWNER_RATIO NUMBER [not null, note: '책소유주 정산 비율 (0~1)']
+  STORE_RATIO NUMBER [not null, note: '서점 정산 비율 (0~1)']
+  CREATED_AT TIMESTAMP [not null, default: 'SYSDATE']
+
+  Note: '정산 비율 이력. 최신 레코드(ID DESC)가 현재 적용 비율.'
+}
+
+// ============================================================
+// BOOK_CASE_TYPE (책장 유형)
+// ============================================================
+
+Table BOOK_CASE_TYPE {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78216']
+  CODE VARCHAR2(50) [unique, not null, note: 'UQ_BOOK_CASE_TYPE_CODE']
+  MONTHLY_PRICE NUMBER [not null, note: '월 임대료']
+  CREATED_AT TIMESTAMP [default: 'SYSTIMESTAMP']
+
+  Note: '책장 유형 마스터. CODE 중복 불가 (UQ_BOOK_CASE_TYPE_CODE).'
+}
+
+// ============================================================
+// BOOK_CASE (책장)
+// ============================================================
+
+Table BOOK_CASE {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78225']
+  GROUP_CODE_ID VARCHAR2(50) [not null, default: 'LOCATION', note: '복합 FK의 GROUP_CODE']
+  COMMON_CODE_ID VARCHAR2(10) [not null, note: '위치 코드 (01, 02, 03)']
+  BOOK_CASE_TYPE_ID NUMBER [not null, ref: > BOOK_CASE_TYPE.ID]
+
+  Note: '''
+  책장 테이블.
+  복합 FK: (GROUP_CODE_ID, COMMON_CODE_ID) -> COMMON_CODE (GROUP_CODE, CODE)
+  GROUP_CODE_ID 기본값 = LOCATION
+  '''
+}
+
+// ============================================================
+// BOOK_CASE_OCCUPIED_RECORD (책장 점유 기록)
+// ============================================================
+
+Table BOOK_CASE_OCCUPIED_RECORD {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78234']
+  BOOK_CASE_ID NUMBER [not null, ref: > BOOK_CASE.ID]
+  BOOK_OWNER_ID NUMBER [not null, ref: > BOOK_OWNER.ID]
+  OCCUPIED_AT TIMESTAMP [not null, default: 'SYSTIMESTAMP']
+  UN_OCCUPIED_AT TIMESTAMP [note: 'NULL이면 현재 점유 중']
+  EXPIRATION_DATE DATE [not null, note: '만기일자']
+  DEPOSIT NUMBER [not null, note: '보증금 (= 월 임대료)']
+  DEPOSIT_STATUS VARCHAR2(20) [not null, default: 'HELD', note: 'HELD / RETURNED / OFFSET']
+
+  indexes {
+    (BOOK_CASE_ID) [name: 'UQ_BCOR_ACTIVE', note: 'Conditional unique: UN_OCCUPIED_AT IS NULL인 행만 (책장당 활성 점유 1건)']
+  }
+
+  Note: '''
+  책장 점유 이력.
+  조건부 Unique Index: UN_OCCUPIED_AT IS NULL인 경우에만 BOOK_CASE_ID 유일성 보장.
+  → 한 책장에 동시에 활성 점유 1건만 허용.
+  '''
+}
+
+// ============================================================
+// BOOK (도서)
+// ============================================================
+
+Table BOOK {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78230']
+  BOOK_OWNER_ID NUMBER [not null, ref: > BOOK_OWNER.ID]
+  BOOK_CASE_ID NUMBER [not null, ref: > BOOK_CASE.ID]
+  BOOK_NAME VARCHAR2(200) [not null]
+  PUBLISHER_HOUSE VARCHAR2(200)
+  PRICE NUMBER [not null]
+  ENTERED_AT DATE [not null, default: 'SYSDATE']
+  GROUP_CODE_ID VARCHAR2(50) [not null, default: 'BOOK_TYPE', note: '복합 FK의 GROUP_CODE']
+  COMMON_CODE_ID VARCHAR2(10) [not null, note: '책 분류 코드 (01~10)']
+  STATE VARCHAR2(30) [not null, default: 'NORMAL', note: 'NORMAL / SOLD / SHOULD_BE_RETRIEVED']
+  DELETED_AT TIMESTAMP [note: 'NULL이면 활성 (회수 시 SYSTIMESTAMP)']
+
+  Note: '''
+  도서 테이블.
+  복합 FK: (GROUP_CODE_ID, COMMON_CODE_ID) -> COMMON_CODE (GROUP_CODE, CODE)
+  GROUP_CODE_ID 기본값 = BOOK_TYPE
+  상태 전이: NORMAL -> SOLD (판매) / NORMAL -> SHOULD_BE_RETRIEVED (임대 종료) -> soft delete (회수)
+  '''
+}
+
+// ============================================================
+// BOOK_OWNER_SETTLEMENT (책소유주 판매 정산)
+// ============================================================
+
+Table BOOK_OWNER_SETTLEMENT {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78238']
+  BOOK_OWNER_ID NUMBER [not null, ref: > BOOK_OWNER.ID]
+  SETTLED_AT TIMESTAMP [not null, default: 'SYSTIMESTAMP']
+  TOTAL_AMOUNT NUMBER [not null, note: '총 판매 금액']
+  OWNER_AMOUNT NUMBER [not null, note: '책소유주 정산 금액']
+  STORE_AMOUNT NUMBER [not null, note: '서점 몫']
+  PAYOUT_KEY VARCHAR2(100) [note: '토스 지급 키']
+  TRANSFER_STATUS VARCHAR2(30) [note: '송금 상태']
+  DEDUCTED_RENTAL_AMOUNT NUMBER [not null, default: 0, note: '이 정산에서 상계된 임대료 총액']
+  ACTUAL_PAYOUT_AMOUNT NUMBER [not null, note: '실제 송금액 (= OWNER_AMOUNT - DEDUCTED_RENTAL_AMOUNT)']
+
+  Note: '''
+  책소유주 판매 정산 테이블.
+  정산 실행(POST /settlements) 시에만 생성 (settledAt 즉시 설정).
+  상계 시 미납 임대료를 FIFO 공제 후 차액만 송금.
+  '''
+}
+
+// ============================================================
+// BOOK_SALE_RECORD (판매 기록)
+// ============================================================
+
+Table BOOK_SALE_RECORD {
+  ID NUMBER [pk, note: 'BOOK.ID와 1:1 (GENERATED BY DEFAULT, ISEQ$$_78242)']
+  SOLD_AT TIMESTAMP [not null, default: 'SYSTIMESTAMP']
+  SOLD_PRICE NUMBER [not null]
+  CUSTOMER_ID NUMBER [not null, ref: > USERS.ID, note: '구매 고객 ID']
+  GROUP_CODE_ID VARCHAR2(50) [not null, default: 'BUY_TYPE', note: '복합 FK의 GROUP_CODE']
+  COMMON_CODE_ID VARCHAR2(10) [not null, note: '구매 유형 코드 (01~05)']
+  BOOK_OWNER_SETTLEMENT_ID NUMBER [ref: > BOOK_OWNER_SETTLEMENT.ID, note: 'NULL이면 미정산']
+  RATIO_ID NUMBER [not null, ref: > SETTLEMENT_RATIO.ID, note: '판매 시점 정산 비율']
+
+  Note: '''
+  판매 기록 테이블.
+  BOOK과 1:1 관계 (BOOK.ID를 ID로 직접 사용).
+  복합 FK: (GROUP_CODE_ID, COMMON_CODE_ID) -> COMMON_CODE (GROUP_CODE, CODE)
+  GROUP_CODE_ID 기본값 = BUY_TYPE
+  미정산 = BOOK_OWNER_SETTLEMENT_ID IS NULL
+  '''
+}
+
+// ============================================================
+// RENTAL_SETTLEMENT (임대료 정산)
+// ============================================================
+
+Table RENTAL_SETTLEMENT {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78284']
+  OCCUPIED_RECORD_ID NUMBER [not null, ref: > BOOK_CASE_OCCUPIED_RECORD.ID]
+  BOOK_OWNER_ID NUMBER [not null, ref: > BOOK_OWNER.ID]
+  TARGET_MONTH VARCHAR2(7) [not null, note: '대상 월 (YYYY-MM)']
+  AMOUNT NUMBER [not null, note: '월 임대료 (생성 시점 MONTHLY_PRICE 고정)']
+  STATUS VARCHAR2(20) [not null, default: 'UNPAID', note: 'UNPAID / PAID / CANCELLED']
+  DEDUCTED_AMOUNT NUMBER [not null, default: 0, note: '상계로 공제된 누적 금액']
+  REMAINING_AMOUNT NUMBER [not null, note: '남은 임대료 (= AMOUNT - DEDUCTED_AMOUNT)']
+  PAID_AT TIMESTAMP [note: '결제 확인 시각']
+  CREATED_AT TIMESTAMP [not null, default: 'SYSTIMESTAMP']
+
+  indexes {
+    (OCCUPIED_RECORD_ID, TARGET_MONTH) [unique, name: 'UQ_RS_RECORD_MONTH', note: '동일 점유 + 동일 월 중복 방지']
+  }
+
+  Note: '''
+  임대료 정산 테이블.
+  점유 생성 시 만기일까지 월별 레코드 일괄 생성 (선불 청구서 패턴).
+  입거월은 일할 계산 금액, 이후 월은 정상 월 임대료.
+  STATUS CHECK: UNPAID / PAID / CANCELLED
+  '''
+}
+
+// ============================================================
+// SETTLEMENT_RENTAL_OFFSET (정산-임대료 상계 내역, N:N)
+// ============================================================
+
+Table SETTLEMENT_RENTAL_OFFSET {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78788']
+  SETTLEMENT_ID NUMBER [not null, ref: > BOOK_OWNER_SETTLEMENT.ID, note: '어떤 정산에서']
+  RENTAL_SETTLEMENT_ID NUMBER [not null, ref: > RENTAL_SETTLEMENT.ID, note: '어떤 임대료를']
+  OFFSET_AMOUNT NUMBER [not null, note: '이 건에서 공제한 금액']
+  CREATED_AT TIMESTAMP [default: 'SYSTIMESTAMP']
+
+  Note: '''
+  정산-임대료 상계 내역 (N:N 관계 추적).
+  하나의 정산이 여러 임대료를 공제할 수 있고,
+  하나의 임대료가 여러 정산에 걸쳐 부분 공제될 수 있음.
+  '''
+}
+
+// ============================================================
+// FK References (복합 FK - COMMON_CODE)
+// ============================================================
+
+// BOOK_CASE -> COMMON_CODE (복합 FK: GROUP_CODE_ID + COMMON_CODE_ID)
+Ref FK_BC_COMMON_CODE: BOOK_CASE.(GROUP_CODE_ID, COMMON_CODE_ID) > COMMON_CODE.(GROUP_CODE, CODE)
+
+// BOOK -> COMMON_CODE (복합 FK: GROUP_CODE_ID + COMMON_CODE_ID)
+Ref FK_BOOK_COMMON_CODE: BOOK.(GROUP_CODE_ID, COMMON_CODE_ID) > COMMON_CODE.(GROUP_CODE, CODE)
+
+// BOOK_SALE_RECORD -> COMMON_CODE (복합 FK: GROUP_CODE_ID + COMMON_CODE_ID)
+Ref FK_BSR_COMMON_CODE: BOOK_SALE_RECORD.(GROUP_CODE_ID, COMMON_CODE_ID) > COMMON_CODE.(GROUP_CODE, CODE)
+
+// BOOK_SALE_RECORD -> BOOK (1:1, ID 공유)
+Ref FK_BSR_BOOK: BOOK_SALE_RECORD.ID - BOOK.ID

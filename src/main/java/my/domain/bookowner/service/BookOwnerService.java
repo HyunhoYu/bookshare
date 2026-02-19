@@ -1,6 +1,7 @@
 package my.domain.bookowner.service;
 
 import my.domain.book.BookVO;
+import my.domain.bookcase.BookCaseVO;
 import my.domain.bookowner.vo.BookOwnerVO;
 import my.domain.booksoldrecord.vo.BookSoldRecordVO;
 import my.domain.settlement.vo.SettlementVO;
@@ -16,5 +17,5 @@ public interface BookOwnerService {
     List<SettlementVO> findAllMySettlements(Long bookOwnerId);
     List<SettlementVO> findMySettled(Long bookOwnerId);
     List<BookSoldRecordVO> findMyUnSettled(Long bookOwnerId);
-
+    List<BookCaseVO> findMyBookCases(Long ownerId);
 }

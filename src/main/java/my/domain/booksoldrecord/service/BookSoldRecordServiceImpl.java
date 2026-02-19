@@ -10,6 +10,7 @@ import my.domain.book.BookVO;
 import my.domain.booksoldrecord.BookSoldRecordMapper;
 import my.domain.booksoldrecord.dto.BuyBookRequestDto;
 import my.domain.booksoldrecord.vo.BookSoldRecordVO;
+import my.domain.code.CommonCodeMapper;
 import my.domain.settlement_ratio.service.SettlementRatioService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ public class BookSoldRecordServiceImpl implements BookSoldRecordService {
     private final BookMapper bookMapper;
     private final BookSoldRecordMapper bookSoldRecordMapper;
     private final SettlementRatioService settlementRatioService;
+    private final CommonCodeMapper commonCodeMapper;
 
 
 
@@ -52,10 +54,15 @@ public class BookSoldRecordServiceImpl implements BookSoldRecordService {
     }
 
     private BookSoldRecordVO createSoldRecord(BookVO bookVO, BuyBookRequestDto dto) {
+        requireNonNull(
+                commonCodeMapper.selectByGroupCodeAndCode("BUY_TYPE", dto.getBuyTypeCommonCode()),
+                ErrorCode.INVALID_BUY_TYPE);
+
         BookSoldRecordVO bookSoldRecordVO = new BookSoldRecordVO();
         bookSoldRecordVO.setId(bookVO.getId());
         bookSoldRecordVO.setSoldPrice(bookVO.getPrice());
         bookSoldRecordVO.setCustomerId(dto.getCustomerId());
+        bookSoldRecordVO.setGroupCodeId("BUY_TYPE");
         bookSoldRecordVO.setCommonCodeId(dto.getBuyTypeCommonCode());
         bookSoldRecordVO.setBookOwnerSettlementId(null);
         bookSoldRecordVO.setRatioId(settlementRatioService.findCurrentRatio().getId());

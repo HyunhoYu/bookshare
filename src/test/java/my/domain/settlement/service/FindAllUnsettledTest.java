@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,6 +61,7 @@ class FindAllUnsettledTest {
     private BookMapper bookMapper;
 
     private Long customerId;
+    private int baselineUnsettledCount;
 
     private String uniqueCode() {
         return UUID.randomUUID().toString().substring(0, 8);
@@ -67,6 +69,9 @@ class FindAllUnsettledTest {
 
     @BeforeEach
     void setUp() {
+        // 기존 미정산 건수 기록 (시드 데이터 등 기존 데이터 보정용)
+        baselineUnsettledCount = settlementService.findAllUnsettled().size();
+
         // 정산 비율 설정
         SettlementRatioVO ratioVO = new SettlementRatioVO();
         ratioVO.setOwnerRatio(0.7);
@@ -96,7 +101,7 @@ class FindAllUnsettledTest {
 
         // 책장 생성
         BookCaseCreateDto caseDto = new BookCaseCreateDto();
-        caseDto.setLocationName("1층 A구역");
+        caseDto.setLocationCode("01");
         caseDto.setBookCaseTypeId(typeId);
         long bookCaseId = bookCaseService.create(caseDto);
 
@@ -112,7 +117,7 @@ class FindAllUnsettledTest {
                 .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), List.of(bookCaseId));
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
 
         // 책 등록
         BookRegisterDto bookDto = new BookRegisterDto();
@@ -121,7 +126,7 @@ class FindAllUnsettledTest {
         bookDto.setBookName(bookName);
         bookDto.setPublisherHouse("출판사");
         bookDto.setPrice(price);
-        bookDto.setBookType("과학");
+        bookDto.setBookTypeCode("04");
         bookCaseService.registerBooks(bookCaseId, List.of(bookDto));
 
         return owner;
@@ -141,15 +146,15 @@ class FindAllUnsettledTest {
     }
 
     @Test
-    @DisplayName("판매 기록이 없으면 미정산 내역 빈 리스트 반환")
+    @DisplayName("판매 기록이 없으면 미정산 내역은 기존 건수와 동일")
     void findAllUnsettled_noSaleRecords_returnsEmpty() {
         List<BookSoldRecordVO> result = settlementService.findAllUnsettled();
 
-        assertThat(result).isEmpty();
+        assertThat(result).hasSize(baselineUnsettledCount);
     }
 
     @Test
-    @DisplayName("책 1건 판매 후 미정산 내역 1건 조회")
+    @DisplayName("책 1건 판매 후 미정산 내역 1건 증가")
     void findAllUnsettled_oneSale_returnsOne() {
         BookOwnerVO owner = createBookOwnerWithBook("single", "이펙티브 자바", 36000);
         Long bookId = getBookIdByOwner(owner);
@@ -158,9 +163,10 @@ class FindAllUnsettledTest {
 
         List<BookSoldRecordVO> result = settlementService.findAllUnsettled();
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getId()).isEqualTo(bookId);
-        assertThat(result.get(0).getBookOwnerSettlementId()).isNull();
+        assertThat(result).hasSize(baselineUnsettledCount + 1);
+        assertThat(result).extracting(BookSoldRecordVO::getId).contains(bookId);
+        BookSoldRecordVO record = result.stream().filter(r -> r.getId().equals(bookId)).findFirst().orElseThrow();
+        assertThat(record.getBookOwnerSettlementId()).isNull();
     }
 
     @Test
@@ -176,9 +182,9 @@ class FindAllUnsettledTest {
 
         List<BookSoldRecordVO> result = settlementService.findAllUnsettled();
 
-        assertThat(result).hasSize(2);
+        assertThat(result).hasSize(baselineUnsettledCount + 2);
         assertThat(result).extracting(BookSoldRecordVO::getId)
-                .containsExactlyInAnyOrder(bookId1, bookId2);
+                .contains(bookId1, bookId2);
     }
 
     @Test
@@ -191,8 +197,9 @@ class FindAllUnsettledTest {
 
         List<BookSoldRecordVO> result = settlementService.findAllUnsettled();
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getSoldPrice()).isEqualTo(25000);
+        assertThat(result).hasSize(baselineUnsettledCount + 1);
+        BookSoldRecordVO record = result.stream().filter(r -> r.getId().equals(bookId)).findFirst().orElseThrow();
+        assertThat(record.getSoldPrice()).isEqualTo(25000);
     }
 
     @Test
@@ -205,7 +212,8 @@ class FindAllUnsettledTest {
 
         List<BookSoldRecordVO> result = settlementService.findAllUnsettled();
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getRatioId()).isNotNull();
+        assertThat(result).hasSize(baselineUnsettledCount + 1);
+        BookSoldRecordVO record = result.stream().filter(r -> r.getId().equals(bookId)).findFirst().orElseThrow();
+        assertThat(record.getRatioId()).isNotNull();
     }
 }

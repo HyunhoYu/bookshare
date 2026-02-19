@@ -11,12 +11,13 @@ import my.domain.bookcase.*;
 import my.domain.bookcasetype.BookCaseTypeMapper;
 import my.domain.bookcasetype.BookCaseTypeVO;
 import my.domain.code.CommonCodeMapper;
-import my.domain.code.CommonCodeVO;
+import my.domain.rental.service.RentalSettlementService;
 import my.domain.user.UserMapper;
 import my.domain.user.UserVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,15 +31,16 @@ public class BookCaseServiceImpl implements BookCaseService {
     private final UserMapper userMapper;
     private final BookMapper bookMapper;
     private final CommonCodeMapper commonCodeMapper;
+    private final RentalSettlementService rentalSettlementService;
 
     @Override
     public long create(BookCaseCreateDto dto) {
         requireNonNull(bookCaseTypeMapper.selectById(dto.getBookCaseTypeId()), ErrorCode.BOOK_CASE_TYPE_NOT_FOUND);
-
-        String locationCode = resolveLocationCode(dto.getLocationName());
+        validateLocationCode(dto.getLocationCode());
 
         BookCaseVO bookCaseVO = new BookCaseVO();
-        bookCaseVO.setCommonCodeId(locationCode);
+        bookCaseVO.setGroupCodeId("LOCATION");
+        bookCaseVO.setCommonCodeId(dto.getLocationCode());
         bookCaseVO.setBookCaseTypeId(dto.getBookCaseTypeId());
 
         int result = bookCaseMapper.insert(bookCaseVO);
@@ -48,11 +50,10 @@ public class BookCaseServiceImpl implements BookCaseService {
         return bookCaseVO.getId();
     }
 
-    private String resolveLocationCode(String locationName) {
-        CommonCodeVO codeVO = requireNonNull(
-                commonCodeMapper.selectByGroupCodeAndCodeName("LOCATION", locationName),
+    private void validateLocationCode(String locationCode) {
+        requireNonNull(
+                commonCodeMapper.selectByGroupCodeAndCode("LOCATION", locationCode),
                 ErrorCode.INVALID_LOCATION_CODE);
-        return codeVO.getCode();
     }
 
     @Override
@@ -79,7 +80,7 @@ public class BookCaseServiceImpl implements BookCaseService {
 
     @Override
     @Transactional
-    public List<BookCaseOccupiedRecordVO> occupy(Long bookOwnerId, List<Long> bookCaseIds) {
+    public List<BookCaseOccupiedRecordVO> occupy(Long bookOwnerId, List<Long> bookCaseIds, LocalDate expirationDate) {
         List<BookCaseOccupiedRecordVO> results = new ArrayList<>();
 
         for (Long bookCaseId : bookCaseIds) {
@@ -89,11 +90,18 @@ public class BookCaseServiceImpl implements BookCaseService {
                 throw new ApplicationException(ErrorCode.BOOK_CASE_ALREADY_OCCUPIED);
             }
 
+            BookCaseVO bookCase = bookCaseMapper.selectById(bookCaseId);
+            BookCaseTypeVO type = bookCaseTypeMapper.selectById(bookCase.getBookCaseTypeId());
+            int monthlyPrice = type.getMonthlyPrice();
+
             BookCaseOccupiedRecordVO record = new BookCaseOccupiedRecordVO();
             record.setBookOwnerId(bookOwnerId);
             record.setBookCaseId(bookCaseId);
+            record.setExpirationDate(expirationDate);
+            record.setDeposit(monthlyPrice);
 
             occupiedRecordMapper.insert(record);
+            rentalSettlementService.generateSettlements(record.getId(), bookOwnerId, LocalDate.now(), expirationDate, monthlyPrice);
             results.add(occupiedRecordMapper.selectById(record.getId()));
         }
 
@@ -124,7 +132,7 @@ public class BookCaseServiceImpl implements BookCaseService {
     }
 
     private BookVO createBook(BookRegisterDto dto, Long bookOwnerId, Long bookCaseId) {
-        String commonCodeId = resolveBookTypeCode(dto.getBookType());
+        validateBookTypeCode(dto.getBookTypeCode());
 
         BookVO bookVO = new BookVO();
         bookVO.setBookOwnerId(bookOwnerId);
@@ -132,7 +140,8 @@ public class BookCaseServiceImpl implements BookCaseService {
         bookVO.setBookName(dto.getBookName());
         bookVO.setPublisherHouse(dto.getPublisherHouse());
         bookVO.setPrice(dto.getPrice());
-        bookVO.setCommonCodeId(commonCodeId);
+        bookVO.setGroupCodeId("BOOK_TYPE");
+        bookVO.setCommonCodeId(dto.getBookTypeCode());
 
         int result = bookMapper.insert(bookVO);
         if (result != 1) {
@@ -142,11 +151,10 @@ public class BookCaseServiceImpl implements BookCaseService {
         return bookMapper.selectById(bookVO.getId());
     }
 
-    private String resolveBookTypeCode(String bookTypeName) {
-        CommonCodeVO codeVO = requireNonNull(
-                commonCodeMapper.selectByGroupCodeAndCodeName("BOOK_TYPE", bookTypeName),
+    private void validateBookTypeCode(String bookTypeCode) {
+        requireNonNull(
+                commonCodeMapper.selectByGroupCodeAndCode("BOOK_TYPE", bookTypeCode),
                 ErrorCode.INVALID_BOOK_TYPE);
-        return codeVO.getCode();
     }
 
     private UserVO findBookOwnerByNameAndPhone(List<BookRegisterDto> bookRegisterDtos) {
@@ -190,6 +198,8 @@ public class BookCaseServiceImpl implements BookCaseService {
         return bookIds;
     }
 
+
+
     private void validateBookCaseIdsNotEmpty(List<Long> bookCaseIds) {
         if (bookCaseIds == null || bookCaseIds.isEmpty()) {
             throw new ApplicationException(ErrorCode.EMPTY_UNOCCUPY_REQUEST);
@@ -206,5 +216,9 @@ public class BookCaseServiceImpl implements BookCaseService {
         }
     }
 
+    @Override
+    public List<BookCaseWithOccupationVO> findAllWithOccupation() {
+        return bookCaseMapper.selectAllWithOccupation();
+    }
 
 }

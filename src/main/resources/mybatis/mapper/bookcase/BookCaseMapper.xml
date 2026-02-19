@@ -5,6 +5,7 @@
 
     <resultMap id="bookCaseResultMap" type="my.domain.bookcase.BookCaseVO">
         <id property="id" column="ID"/>
+        <result property="groupCodeId" column="GROUP_CODE_ID"/>
         <result property="commonCodeId" column="COMMON_CODE_ID"/>
         <result property="bookCaseTypeId" column="BOOK_CASE_TYPE_ID"/>
     </resultMap>
@@ -13,8 +14,8 @@
         <selectKey keyProperty="id" resultType="long" order="AFTER">
             SELECT "ISEQ$$_78225".CURRVAL FROM DUAL
         </selectKey>
-        INSERT INTO BOOK_CASE (COMMON_CODE_ID, BOOK_CASE_TYPE_ID)
-        VALUES (#{commonCodeId}, #{bookCaseTypeId})
+        INSERT INTO BOOK_CASE (GROUP_CODE_ID, COMMON_CODE_ID, BOOK_CASE_TYPE_ID)
+        VALUES (#{groupCodeId}, #{commonCodeId}, #{bookCaseTypeId})
     </insert>
 
     <select id="selectById" parameterType="long" resultMap="bookCaseResultMap">
@@ -43,5 +44,21 @@
         AND OC.UN_OCCUPIED_AT IS NULL
     </select>
 
+    <select id="selectAllWithOccupation" resultType="my.domain.bookcase.BookCaseWithOccupationVO">
+        SELECT BC.ID,
+               BC.GROUP_CODE_ID,
+               BC.COMMON_CODE_ID,
+               CC.CODE_NAME AS LOCATION_NAME,
+               BC.BOOK_CASE_TYPE_ID,
+               BCT.CODE AS BOOK_CASE_TYPE_CODE,
+               BCT.MONTHLY_PRICE,
+               CASE WHEN BCOR.ID IS NOT NULL THEN 1 ELSE 0 END AS OCCUPIED,
+               BCOR.BOOK_OWNER_ID
+        FROM BOOK_CASE BC
+        JOIN COMMON_CODE CC ON CC.GROUP_CODE = BC.GROUP_CODE_ID AND CC.CODE = BC.COMMON_CODE_ID
+        JOIN BOOK_CASE_TYPE BCT ON BCT.ID = BC.BOOK_CASE_TYPE_ID
+        LEFT JOIN BOOK_CASE_OCCUPIED_RECORD BCOR ON BCOR.BOOK_CASE_ID = BC.ID AND BCOR.UN_OCCUPIED_AT IS NULL
+        ORDER BY BC.ID
+    </select>
 
 </mapper>

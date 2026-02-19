@@ -3,8 +3,6 @@
 
 <mapper namespace="my.domain.bookowner.BookOwnerMapper">
 
-
-
     <sql id="bookOwnerJoin">
         FROM USERS u
         JOIN BOOK_OWNER b ON u.ID = b.ID

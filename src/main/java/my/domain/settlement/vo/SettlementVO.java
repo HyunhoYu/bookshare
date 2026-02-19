@@ -17,4 +17,9 @@ public class SettlementVO extends MyApplicationVO {
     private int storeAmount;
     private String payoutKey;
     private String transferStatus;
+    private int deductedRentalAmount;
+    private int actualPayoutAmount;
+
+    // JOIN field
+    private String bookOwnerName;
 }
