@@ -16,7 +16,7 @@ public class SettlementScheduler {
 
     private final SettlementService settlementService;
 
-    @Scheduled(cron = "0 0 6 1 * *")
+    @Scheduled(cron = "0 0 6 1 * *", zone = "Asia/Seoul")
     public void monthlySettlement() {
         log.info("월초 배치 정산 시작");
         List<SettlementVO> results = settlementService.settleAll();

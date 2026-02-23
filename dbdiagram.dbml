@@ -148,8 +148,7 @@ Table BOOK_CASE_OCCUPIED_RECORD {
   OCCUPIED_AT TIMESTAMP [not null, default: 'SYSTIMESTAMP']
   UN_OCCUPIED_AT TIMESTAMP [note: 'NULL이면 현재 점유 중']
   EXPIRATION_DATE DATE [not null, note: '만기일자']
-  DEPOSIT NUMBER [not null, note: '보증금 (= 월 임대료)']
-  DEPOSIT_STATUS VARCHAR2(20) [not null, default: 'HELD', note: 'HELD / RETURNED / OFFSET']
+  SUSPENDED_AT TIMESTAMP [note: 'NULL=정상, NOT NULL=중지 상태']
 
   indexes {
     (BOOK_CASE_ID) [name: 'UQ_BCOR_ACTIVE', note: 'Conditional unique: UN_OCCUPIED_AT IS NULL인 행만 (책장당 활성 점유 1건)']
@@ -200,13 +199,11 @@ Table BOOK_OWNER_SETTLEMENT {
   STORE_AMOUNT NUMBER [not null, note: '서점 몫']
   PAYOUT_KEY VARCHAR2(100) [note: '토스 지급 키']
   TRANSFER_STATUS VARCHAR2(30) [note: '송금 상태']
-  DEDUCTED_RENTAL_AMOUNT NUMBER [not null, default: 0, note: '이 정산에서 상계된 임대료 총액']
-  ACTUAL_PAYOUT_AMOUNT NUMBER [not null, note: '실제 송금액 (= OWNER_AMOUNT - DEDUCTED_RENTAL_AMOUNT)']
 
   Note: '''
   책소유주 판매 정산 테이블.
   정산 실행(POST /settlements) 시에만 생성 (settledAt 즉시 설정).
-  상계 시 미납 임대료를 FIFO 공제 후 차액만 송금.
+  ownerAmount 전액 송금 (임대료 상계는 보증금 스케줄러가 담당).
   '''
 }
 
@@ -262,20 +259,43 @@ Table RENTAL_SETTLEMENT {
 }
 
 // ============================================================
-// SETTLEMENT_RENTAL_OFFSET (정산-임대료 상계 내역, N:N)
+// DEPOSIT (보증금)
 // ============================================================
 
-Table SETTLEMENT_RENTAL_OFFSET {
-  ID NUMBER [pk, increment, note: 'ISEQ$$_78788']
-  SETTLEMENT_ID NUMBER [not null, ref: > BOOK_OWNER_SETTLEMENT.ID, note: '어떤 정산에서']
-  RENTAL_SETTLEMENT_ID NUMBER [not null, ref: > RENTAL_SETTLEMENT.ID, note: '어떤 임대료를']
-  OFFSET_AMOUNT NUMBER [not null, note: '이 건에서 공제한 금액']
-  CREATED_AT TIMESTAMP [default: 'SYSTIMESTAMP']
+Table DEPOSIT {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78799']
+  BOOK_OWNER_ID NUMBER [unique, not null, ref: - BOOK_OWNER.ID, note: '책소유주당 1건']
+  AMOUNT NUMBER [not null, note: '보증금 원금']
+  REMAINING_AMOUNT NUMBER [not null, note: '잔여 보증금 (공제 후 남은 금액)']
+  STATUS VARCHAR2(20) [not null, default: 'HELD', note: 'HELD / DEPLETED / RETURNED']
+  CREATED_AT TIMESTAMP [not null, default: 'SYSTIMESTAMP']
 
   Note: '''
-  정산-임대료 상계 내역 (N:N 관계 추적).
-  하나의 정산이 여러 임대료를 공제할 수 있고,
-  하나의 임대료가 여러 정산에 걸쳐 부분 공제될 수 있음.
+  보증금 테이블 (BOOK_OWNER 1:1).
+  책소유주 단위로 보증금을 통합 관리.
+  책장 추가 임대 시 AMOUNT/REMAINING_AMOUNT 누적 적립.
+  연체 임대료 공제 시 REMAINING_AMOUNT 차감.
+  소진 시 STATUS=DEPLETED → 추가 연체 시 BCOR SUSPENDED.
+  STATUS CHECK: HELD / DEPLETED / RETURNED
+  '''
+}
+
+// ============================================================
+// DEPOSIT_RENTAL_OFFSET (보증금-임대료 상계 내역, N:N)
+// ============================================================
+
+Table DEPOSIT_RENTAL_OFFSET {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78803']
+  DEPOSIT_ID NUMBER [not null, ref: > DEPOSIT.ID, note: '어떤 보증금에서']
+  RENTAL_SETTLEMENT_ID NUMBER [not null, ref: > RENTAL_SETTLEMENT.ID, note: '어떤 임대료를']
+  OFFSET_AMOUNT NUMBER [not null, note: '이 건에서 공제한 금액']
+  CREATED_AT TIMESTAMP [not null, default: 'SYSTIMESTAMP']
+
+  Note: '''
+  보증금-임대료 상계 내역 (N:N 관계 추적).
+  하나의 보증금이 여러 연체 임대료를 공제할 수 있고,
+  하나의 임대료가 여러 차례에 걸쳐 부분 공제될 수 있음.
+  매월 1일 05:00 스케줄러가 FIFO 순서로 공제 실행.
   '''
 }
 

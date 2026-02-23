@@ -79,7 +79,6 @@ class BookCaseOccupiedRecordMapperTest {
         record.setBookCaseId(bookCaseId);
         record.setBookOwnerId(bookOwnerId);
         record.setExpirationDate(LocalDate.now().plusMonths(3));
-        record.setDeposit(30000);
 
         int result = occupiedRecordMapper.insert(record);
 
@@ -94,7 +93,6 @@ class BookCaseOccupiedRecordMapperTest {
         record.setBookCaseId(bookCaseId);
         record.setBookOwnerId(bookOwnerId);
         record.setExpirationDate(LocalDate.now().plusMonths(3));
-        record.setDeposit(30000);
         occupiedRecordMapper.insert(record);
 
         BookCaseOccupiedRecordVO current = occupiedRecordMapper.selectCurrentByBookCaseId(bookCaseId);
@@ -120,7 +118,6 @@ class BookCaseOccupiedRecordMapperTest {
         record.setBookCaseId(bookCaseId);
         record.setBookOwnerId(bookOwnerId);
         record.setExpirationDate(LocalDate.now().plusMonths(3));
-        record.setDeposit(30000);
         occupiedRecordMapper.insert(record);
 
         // 점유 해제
@@ -150,14 +147,12 @@ class BookCaseOccupiedRecordMapperTest {
         r1.setBookCaseId(bookCaseId);
         r1.setBookOwnerId(bookOwnerId);
         r1.setExpirationDate(LocalDate.now().plusMonths(3));
-        r1.setDeposit(30000);
         occupiedRecordMapper.insert(r1);
 
         BookCaseOccupiedRecordVO r2 = new BookCaseOccupiedRecordVO();
         r2.setBookCaseId(bookCaseId2);
         r2.setBookOwnerId(bookOwnerId);
         r2.setExpirationDate(LocalDate.now().plusMonths(3));
-        r2.setDeposit(40000);
         occupiedRecordMapper.insert(r2);
 
         List<BookCaseOccupiedRecordVO> history = occupiedRecordMapper.selectByBookOwnerId(bookOwnerId);
@@ -174,7 +169,6 @@ class BookCaseOccupiedRecordMapperTest {
         r1.setBookCaseId(bookCaseId);
         r1.setBookOwnerId(bookOwnerId);
         r1.setExpirationDate(LocalDate.now().plusMonths(3));
-        r1.setDeposit(30000);
         occupiedRecordMapper.insert(r1);
 
         // 2. 해제
@@ -198,7 +192,6 @@ class BookCaseOccupiedRecordMapperTest {
         r2.setBookCaseId(bookCaseId);
         r2.setBookOwnerId(owner2.getId());
         r2.setExpirationDate(LocalDate.now().plusMonths(3));
-        r2.setDeposit(30000);
         occupiedRecordMapper.insert(r2);
 
         // 현재 점유자는 owner2

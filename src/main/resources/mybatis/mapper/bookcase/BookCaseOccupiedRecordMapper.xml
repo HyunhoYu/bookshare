@@ -10,15 +10,15 @@
         <result property="occupiedAt" column="OCCUPIED_AT"/>
         <result property="unOccupiedAt" column="UN_OCCUPIED_AT"/>
         <result property="expirationDate" column="EXPIRATION_DATE"/>
-        <result property="deposit" column="DEPOSIT"/>
+        <result property="suspendedAt" column="SUSPENDED_AT"/>
     </resultMap>
 
     <insert id="insert" parameterType="my.domain.bookcase.BookCaseOccupiedRecordVO">
         <selectKey keyProperty="id" resultType="long" order="AFTER">
             SELECT "ISEQ$$_78234".CURRVAL FROM DUAL
         </selectKey>
-        INSERT INTO BOOK_CASE_OCCUPIED_RECORD (BOOK_CASE_ID, BOOK_OWNER_ID, OCCUPIED_AT, EXPIRATION_DATE, DEPOSIT)
-        VALUES (#{bookCaseId}, #{bookOwnerId}, SYSTIMESTAMP, #{expirationDate}, #{deposit})
+        INSERT INTO BOOK_CASE_OCCUPIED_RECORD (BOOK_CASE_ID, BOOK_OWNER_ID, OCCUPIED_AT, EXPIRATION_DATE)
+        VALUES (#{bookCaseId}, #{bookOwnerId}, SYSTIMESTAMP, #{expirationDate})
     </insert>
 
     <select id="selectById" parameterType="long" resultMap="occupiedRecordResultMap">
@@ -70,6 +70,18 @@
         AND UN_OCCUPIED_AT IS NULL
     </update>
 
+
+    <select id="selectAllActive" resultMap="occupiedRecordResultMap">
+        SELECT * FROM BOOK_CASE_OCCUPIED_RECORD
+        WHERE UN_OCCUPIED_AT IS NULL
+        ORDER BY BOOK_OWNER_ID ASC, ID ASC
+    </select>
+
+    <update id="updateSuspendedAt" parameterType="long">
+        UPDATE BOOK_CASE_OCCUPIED_RECORD
+        SET SUSPENDED_AT = SYSTIMESTAMP
+        WHERE ID = #{id} AND SUSPENDED_AT IS NULL
+    </update>
 
     <!-- 책소유주 id로 현재 점유중인 책장 리스트 조회    -->
 

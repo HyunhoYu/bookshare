@@ -98,9 +98,9 @@ public class BookCaseServiceImpl implements BookCaseService {
             record.setBookOwnerId(bookOwnerId);
             record.setBookCaseId(bookCaseId);
             record.setExpirationDate(expirationDate);
-            record.setDeposit(monthlyPrice);
 
             occupiedRecordMapper.insert(record);
+            // TODO: Phase 2에서 DepositMapper.insert()로 보증금 INSERT 추가 (amount = monthlyPrice)
             rentalSettlementService.generateSettlements(record.getId(), bookOwnerId, LocalDate.now(), expirationDate, monthlyPrice);
             results.add(occupiedRecordMapper.selectById(record.getId()));
         }

@@ -15,7 +15,7 @@ public class BookCaseOccupiedRecordVO {
     private LocalDateTime occupiedAt;
     private LocalDateTime unOccupiedAt;
     private LocalDate expirationDate;
-    private int deposit;
+    private LocalDateTime suspendedAt;
 
 }
 

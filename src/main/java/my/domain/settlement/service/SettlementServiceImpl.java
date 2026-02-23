@@ -15,12 +15,8 @@ import my.domain.booksoldrecord.BookSoldRecordMapper;
 import my.domain.booksoldrecord.vo.BookSoldRecordVO;
 import my.domain.payment.TossPaymentService;
 import my.domain.payment.dto.TossTransferResponseDto;
-import my.domain.rental.RentalSettlementMapper;
-import my.domain.rental.RentalSettlementVO;
 import my.domain.settlement.SettlementMapper;
-import my.domain.settlement.SettlementRentalOffsetMapper;
 import my.domain.settlement.dto.SettlementRequestDto;
-import my.domain.settlement.vo.SettlementRentalOffsetVO;
 import my.domain.settlement.vo.SettlementVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,8 +36,6 @@ public class SettlementServiceImpl implements SettlementService{
     private final BookOwnerMapper bookOwnerMapper;
     private final BankAccountMapper bankAccountMapper;
     private final TossPaymentService tossPaymentService;
-    private final RentalSettlementMapper rentalSettlementMapper;
-    private final SettlementRentalOffsetMapper settlementRentalOffsetMapper;
 
     @Override
     public List<SettlementVO> findAll() {
@@ -89,78 +83,35 @@ public class SettlementServiceImpl implements SettlementService{
             throw new ApplicationException(ErrorCode.SETTLEMENT_AMOUNT_ZERO);
         }
 
-        // 상계 계산: 미납 임대료 FIFO 공제
-        List<RentalSettlementVO> unpaidRentals = rentalSettlementMapper.selectUnpaidByBookOwnerId(bookOwnerId);
-        int remainingPayout = ownerAmount;
-        int totalDeducted = 0;
-        List<DeductionEntry> deductions = new ArrayList<>();
-
-        for (RentalSettlementVO rental : unpaidRentals) {
-            if (remainingPayout <= 0) break;
-            int deductible = Math.min(rental.getRemainingAmount(), remainingPayout);
-            int newRemaining = rental.getRemainingAmount() - deductible;
-            int newDeducted = rental.getDeductedAmount() + deductible;
-            String newStatus = (newRemaining == 0) ? "PAID" : "UNPAID";
-            deductions.add(new DeductionEntry(rental.getId(), newDeducted, newRemaining, newStatus, deductible));
-            totalDeducted += deductible;
-            remainingPayout -= deductible;
+        // 송금
+        BankAccountVO bankAccount = bankAccountMapper.selectById(bookOwnerId);
+        String bankCode = bankAccount.getBankCode();
+        if (bankCode == null) {
+            bankCode = BankCodeResolver.resolve(bankAccount.getBankName());
+        }
+        if (bankCode == null) {
+            throw new ApplicationException(ErrorCode.BANK_CODE_NOT_FOUND);
         }
 
-        int actualPayoutAmount = ownerAmount - totalDeducted;
+        BookOwnerVO bookOwner = bookOwnerMapper.selectById(bookOwnerId);
+        String holderName = bookOwner.getName();
 
-        // 송금: actualPayoutAmount > 0일 때만 토스 송금 호출
-        String payoutKey;
-        String transferStatus;
+        TossTransferResponseDto transferResponse = tossPaymentService.transfer(
+                bankCode, bankAccount.getAccountNumber(), ownerAmount, holderName
+        );
 
-        if (actualPayoutAmount > 0) {
-            BankAccountVO bankAccount = bankAccountMapper.selectById(bookOwnerId);
-            String bankCode = bankAccount.getBankCode();
-            if (bankCode == null) {
-                bankCode = BankCodeResolver.resolve(bankAccount.getBankName());
-            }
-            if (bankCode == null) {
-                throw new ApplicationException(ErrorCode.BANK_CODE_NOT_FOUND);
-            }
+        String payoutKey = transferResponse.getPayoutKey();
+        String transferStatus = transferResponse.getStatus();
 
-            BookOwnerVO bookOwner = bookOwnerMapper.selectById(bookOwnerId);
-            String holderName = bookOwner.getName();
-
-            TossTransferResponseDto transferResponse = tossPaymentService.transfer(
-                    bankCode, bankAccount.getAccountNumber(), actualPayoutAmount, holderName
-            );
-
-            payoutKey = transferResponse.getPayoutKey();
-            transferStatus = transferResponse.getStatus();
-
-            log.info("정산 송금 완료 - payoutKey: {}, bookOwnerId: {}, ownerAmount: {}, deducted: {}, actualPayout: {}",
-                    payoutKey, bookOwnerId, ownerAmount, totalDeducted, actualPayoutAmount);
-        } else {
-            payoutKey = "RENTAL_OFFSET";
-            transferStatus = "OFFSET_COMPLETED";
-
-            log.info("정산 전액 상계 - bookOwnerId: {}, ownerAmount: {}, deducted: {}, actualPayout: 0",
-                    bookOwnerId, ownerAmount, totalDeducted);
-        }
+        log.info("정산 송금 완료 - payoutKey: {}, bookOwnerId: {}, ownerAmount: {}",
+                payoutKey, bookOwnerId, ownerAmount);
 
         // Settlement INSERT
         SettlementVO settlementVO = createSettlement(bookOwnerId, totalAmount, ownerAmount, storeAmount,
-                payoutKey, transferStatus, totalDeducted, actualPayoutAmount);
+                payoutKey, transferStatus);
 
         // 판매기록 UPDATE
         bookSoldRecordMapper.updateSettlementId(settlementVO.getId(), saleRecordIds);
-
-        // 상계 내역 INSERT + 임대료 UPDATE
-        for (DeductionEntry entry : deductions) {
-            SettlementRentalOffsetVO offsetVO = new SettlementRentalOffsetVO();
-            offsetVO.setSettlementId(settlementVO.getId());
-            offsetVO.setRentalSettlementId(entry.rentalId());
-            offsetVO.setOffsetAmount(entry.offsetAmount());
-            settlementRentalOffsetMapper.insert(offsetVO);
-
-            rentalSettlementMapper.updateDeducted(
-                    entry.rentalId(), entry.deductedAmount(), entry.remainingAmount(), entry.status()
-            );
-        }
 
         return settlementVO;
     }
@@ -220,8 +171,7 @@ public class SettlementServiceImpl implements SettlementService{
     }
 
     private SettlementVO createSettlement(Long bookOwnerId, int totalAmount, int ownerAmount,
-                                          int storeAmount, String payoutKey, String transferStatus,
-                                          int deductedRentalAmount, int actualPayoutAmount) {
+                                          int storeAmount, String payoutKey, String transferStatus) {
         SettlementVO settlementVO = new SettlementVO();
         settlementVO.setBookOwnerId(bookOwnerId);
         settlementVO.setTotalAmount(totalAmount);
@@ -229,8 +179,6 @@ public class SettlementServiceImpl implements SettlementService{
         settlementVO.setStoreAmount(storeAmount);
         settlementVO.setPayoutKey(payoutKey);
         settlementVO.setTransferStatus(transferStatus);
-        settlementVO.setDeductedRentalAmount(deductedRentalAmount);
-        settlementVO.setActualPayoutAmount(actualPayoutAmount);
 
         int insertResult = settlementMapper.insert(settlementVO);
         if (insertResult != 1) {
@@ -239,7 +187,4 @@ public class SettlementServiceImpl implements SettlementService{
 
         return settlementMapper.selectById(settlementVO.getId());
     }
-
-    private record DeductionEntry(Long rentalId, int deductedAmount, int remainingAmount,
-                                   String status, int offsetAmount) {}
 }

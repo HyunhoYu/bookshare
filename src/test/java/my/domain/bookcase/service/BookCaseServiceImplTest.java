@@ -152,7 +152,6 @@ class BookCaseServiceImplTest {
         record.setBookCaseId(caseId1);
         record.setBookOwnerId(owner.getId());
         record.setExpirationDate(LocalDate.now().plusMonths(3));
-        record.setDeposit(50000);
         occupiedRecordMapper.insert(record);
 
         List<BookCaseVO> usable = bookCaseService.findUsable();
@@ -173,7 +172,6 @@ class BookCaseServiceImplTest {
         record.setBookCaseId(caseId);
         record.setBookOwnerId(owner.getId());
         record.setExpirationDate(LocalDate.now().plusMonths(3));
-        record.setDeposit(50000);
         occupiedRecordMapper.insert(record);
 
         // 점유 해제
@@ -197,14 +195,12 @@ class BookCaseServiceImplTest {
         r1.setBookCaseId(caseId1);
         r1.setBookOwnerId(owner1.getId());
         r1.setExpirationDate(LocalDate.now().plusMonths(3));
-        r1.setDeposit(50000);
         occupiedRecordMapper.insert(r1);
 
         BookCaseOccupiedRecordVO r2 = new BookCaseOccupiedRecordVO();
         r2.setBookCaseId(caseId2);
         r2.setBookOwnerId(owner2.getId());
         r2.setExpirationDate(LocalDate.now().plusMonths(3));
-        r2.setDeposit(50000);
         occupiedRecordMapper.insert(r2);
 
         List<BookCaseVO> usable = bookCaseService.findUsable();

@@ -12,14 +12,11 @@
         <result property="storeAmount" column="STORE_AMOUNT"/>
         <result property="payoutKey" column="PAYOUT_KEY"/>
         <result property="transferStatus" column="TRANSFER_STATUS"/>
-        <result property="deductedRentalAmount" column="DEDUCTED_RENTAL_AMOUNT"/>
-        <result property="actualPayoutAmount" column="ACTUAL_PAYOUT_AMOUNT"/>
     </resultMap>
 
     <sql id="settlementDetailSelect">
         SELECT S.ID, S.BOOK_OWNER_ID, S.SETTLED_AT, S.TOTAL_AMOUNT,
                S.OWNER_AMOUNT, S.STORE_AMOUNT, S.PAYOUT_KEY, S.TRANSFER_STATUS,
-               S.DEDUCTED_RENTAL_AMOUNT, S.ACTUAL_PAYOUT_AMOUNT,
                U.NAME AS BOOK_OWNER_NAME
         FROM BOOK_OWNER_SETTLEMENT S
         JOIN USERS U ON S.BOOK_OWNER_ID = U.ID
@@ -49,8 +46,8 @@
         <selectKey keyProperty="id" resultType="long" order="AFTER">
             SELECT "ISEQ$$_78238".CURRVAL FROM DUAL
         </selectKey>
-        INSERT INTO BOOK_OWNER_SETTLEMENT (BOOK_OWNER_ID, SETTLED_AT, TOTAL_AMOUNT, OWNER_AMOUNT, STORE_AMOUNT, PAYOUT_KEY, TRANSFER_STATUS, DEDUCTED_RENTAL_AMOUNT, ACTUAL_PAYOUT_AMOUNT)
-        VALUES (#{bookOwnerId}, SYSTIMESTAMP, #{totalAmount}, #{ownerAmount}, #{storeAmount}, #{payoutKey, jdbcType=VARCHAR}, #{transferStatus}, #{deductedRentalAmount}, #{actualPayoutAmount})
+        INSERT INTO BOOK_OWNER_SETTLEMENT (BOOK_OWNER_ID, SETTLED_AT, TOTAL_AMOUNT, OWNER_AMOUNT, STORE_AMOUNT, PAYOUT_KEY, TRANSFER_STATUS)
+        VALUES (#{bookOwnerId}, SYSTIMESTAMP, #{totalAmount}, #{ownerAmount}, #{storeAmount}, #{payoutKey, jdbcType=VARCHAR}, #{transferStatus})
     </insert>
 
 </mapper>

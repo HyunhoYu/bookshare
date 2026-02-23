@@ -73,12 +73,45 @@
         ORDER BY TARGET_MONTH ASC, ID ASC
     </select>
 
+    <select id="selectOverdueUnpaidByBookOwnerId" resultMap="rentalSettlementResultMap">
+        SELECT * FROM RENTAL_SETTLEMENT
+        WHERE BOOK_OWNER_ID = #{bookOwnerId}
+          AND STATUS = 'UNPAID'
+          AND REMAINING_AMOUNT > 0
+          AND TARGET_MONTH &lt; #{currentMonth}
+        ORDER BY TARGET_MONTH ASC, ID ASC
+    </select>
+
     <update id="updateDeducted">
         UPDATE RENTAL_SETTLEMENT
         SET DEDUCTED_AMOUNT = #{deductedAmount},
             REMAINING_AMOUNT = #{remainingAmount},
             STATUS = #{status},
             PAID_AT = CASE WHEN #{status} = 'PAID' THEN SYSTIMESTAMP ELSE PAID_AT END
+        WHERE ID = #{id}
+    </update>
+
+    <select id="selectOverdueByOccupiedRecordId" resultMap="rentalSettlementResultMap">
+        SELECT * FROM RENTAL_SETTLEMENT
+        WHERE OCCUPIED_RECORD_ID = #{occupiedRecordId}
+          AND STATUS = 'UNPAID'
+          AND REMAINING_AMOUNT > 0
+          AND TARGET_MONTH &lt; #{currentMonth}
+        ORDER BY TARGET_MONTH ASC, ID ASC
+    </select>
+
+    <update id="update" parameterType="my.domain.rental.RentalSettlementVO">
+        UPDATE RENTAL_SETTLEMENT
+        SET STATUS = #{status},
+            DEDUCTED_AMOUNT = #{deductedAmount},
+            REMAINING_AMOUNT = #{remainingAmount},
+            PAID_AT = #{paidAt}
+        WHERE ID = #{id}
+    </update>
+
+    <update id="updateTargetMonth">
+        UPDATE RENTAL_SETTLEMENT
+        SET TARGET_MONTH = #{targetMonth}
         WHERE ID = #{id}
     </update>
 

@@ -17,4 +17,6 @@ public interface BookCaseOccupiedRecordMapper {
     int unOccupyBookCases(@Param("bookCaseIds") List<Long> bookCaseIds);
     List<BookCaseOccupiedRecordVO> selectOccupiedRecordByIds(@Param("occupiedRecordIds") List<Long> occupiedRecordIds);
     List<BookCaseVO> selectBookCasesByOwnerId(long id);
+    List<BookCaseOccupiedRecordVO> selectAllActive();
+    int updateSuspendedAt(long id);
 }

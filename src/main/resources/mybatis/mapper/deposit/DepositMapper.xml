@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.deposit.DepositMapper">
+
+    <resultMap id="depositResultMap" type="my.domain.deposit.DepositVO">
+        <id property="id" column="ID"/>
+        <result property="bookOwnerId" column="BOOK_OWNER_ID"/>
+        <result property="amount" column="AMOUNT"/>
+        <result property="remainingAmount" column="REMAINING_AMOUNT"/>
+        <result property="status" column="STATUS"/>
+        <result property="createdAt" column="CREATED_AT"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="my.domain.deposit.DepositVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78799".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO DEPOSIT (BOOK_OWNER_ID, AMOUNT, REMAINING_AMOUNT)
+        VALUES (#{bookOwnerId}, #{amount}, #{amount})
+    </insert>
+
+    <update id="update" parameterType="my.domain.deposit.DepositVO">
+        UPDATE DEPOSIT
+        SET AMOUNT = #{amount},
+            REMAINING_AMOUNT = #{remainingAmount},
+            STATUS = #{status}
+        WHERE ID = #{id}
+    </update>
+
+    <select id="selectByBookOwnerId" parameterType="long" resultMap="depositResultMap">
+        SELECT * FROM DEPOSIT WHERE BOOK_OWNER_ID = #{bookOwnerId}
+    </select>
+
+</mapper>
