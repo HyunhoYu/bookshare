@@ -51,13 +51,16 @@ public class BookCaseController {
     public ApiResponse<List<BookCaseVO>> findUsable() {
         List<BookCaseVO> result = bookCaseService.findUsable();
 
+
+
         return ApiResponse.success(result);
     }
+
 
     @RequireRole(Role.ADMIN)
     @PostMapping("/occupy")
     public ApiResponse<List<BookCaseOccupiedRecordVO>> occupy(@RequestBody @Valid OccupyRequestDto dto) {
-        List<BookCaseOccupiedRecordVO> result = bookCaseService.occupy(dto.getBookOwnerId(), dto.getBookCaseIds(), dto.getExpirationDate());
+        List<BookCaseOccupiedRecordVO> result = bookCaseService.occupy(dto.getBookOwnerId(), dto.getBookCaseIds(), dto.getExpirationDate(), dto.getDepositAmount());
         return ApiResponse.created(result);
     }
 

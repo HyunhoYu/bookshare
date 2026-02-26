@@ -17,7 +17,7 @@ public interface BookCaseService {
     List<BookCaseVO> findAll();
     List<BookCaseVO> findUsable();
     boolean isOccupied(Long bookCaseId);
-    List<BookCaseOccupiedRecordVO> occupy(Long bookOwnerId, List<Long> bookCaseIds, LocalDate expirationDate);
+    List<BookCaseOccupiedRecordVO> occupy(Long bookOwnerId, List<Long> bookCaseIds, LocalDate expirationDate, int depositAmount);
     List<BookVO> registerBooks(Long bookcaseId, List<BookRegisterDto> bookRegisterDtos);
     List<Long> findOccupyingBookCaseIds(Long bookOwnerId);
     List<Long> unOccupyProcess(List<Long> bookCaseIds);

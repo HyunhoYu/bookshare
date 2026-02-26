@@ -15,6 +15,10 @@ import my.domain.bookowner.vo.BookOwnerVO;
 import my.domain.booksoldrecord.dto.BuyBookRequestDto;
 import my.domain.booksoldrecord.service.BookSoldRecordService;
 import my.domain.customer.service.auth.CustomerAuthService;
+import my.domain.deposit.DepositMapper;
+import my.domain.deposit.DepositVO;
+import my.domain.settlement.dto.SettlementRequestDto;
+import my.domain.settlement.service.SettlementService;
 import my.domain.settlement_ratio.service.SettlementRatioService;
 import my.domain.settlement_ratio.vo.SettlementRatioVO;
 import my.domain.user.UserVO;
@@ -45,7 +49,9 @@ class UnOccupyProcessTest {
     @Autowired private BookSoldRecordService bookSoldRecordService;
     @Autowired private CustomerAuthService customerAuthService;
     @Autowired private SettlementRatioService settlementRatioService;
+    @Autowired private SettlementService settlementService;
     @Autowired private BookMapper bookMapper;
+    @Autowired private DepositMapper depositMapper;
 
     private long typeId;
 
@@ -126,7 +132,7 @@ class UnOccupyProcessTest {
         void unOccupy_single_booksChangeState() {
             long bookCaseId = createBookCase();
             BookOwnerVO owner = createBookOwner();
-            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3), 50000);
             List<BookVO> books = registerBooks(bookCaseId, owner, 2);
 
             List<Long> changedBookIds = bookCaseService.unOccupyProcess(List.of(bookCaseId));
@@ -146,8 +152,8 @@ class UnOccupyProcessTest {
             BookOwnerVO owner1 = createBookOwner();
             BookOwnerVO owner2 = createBookOwner();
 
-            bookCaseService.occupy(owner1.getId(), List.of(caseId1), LocalDate.now().plusMonths(3));
-            bookCaseService.occupy(owner2.getId(), List.of(caseId2), LocalDate.now().plusMonths(3));
+            bookCaseService.occupy(owner1.getId(), List.of(caseId1), LocalDate.now().plusMonths(3), 50000);
+            bookCaseService.occupy(owner2.getId(), List.of(caseId2), LocalDate.now().plusMonths(3), 50000);
             registerBooks(caseId1, owner1, 1);
             registerBooks(caseId2, owner2, 2);
 
@@ -165,7 +171,7 @@ class UnOccupyProcessTest {
         void unOccupy_bookCaseBecomesUsable() {
             long bookCaseId = createBookCase();
             BookOwnerVO owner = createBookOwner();
-            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3), 50000);
 
             bookCaseService.unOccupyProcess(List.of(bookCaseId));
 
@@ -179,7 +185,7 @@ class UnOccupyProcessTest {
         void unOccupy_allBooksSold_returnsEmpty() {
             long bookCaseId = createBookCase();
             BookOwnerVO owner = createBookOwner();
-            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3), 50000);
             List<BookVO> books = registerBooks(bookCaseId, owner, 1);
 
             Long customerId = createCustomer();
@@ -188,6 +194,12 @@ class UnOccupyProcessTest {
             buyDto.setCustomerId(customerId);
             buyDto.setBuyTypeCommonCode("01");
             bookSoldRecordService.sellBooks(List.of(buyDto));
+
+            // 미정산 판매기록 정산 처리
+            SettlementRequestDto settleDto = new SettlementRequestDto();
+            settleDto.setBookOwnerId(owner.getId());
+            settleDto.setSaleRecordIds(List.of(books.get(0).getId()));
+            settlementService.settle(settleDto);
 
             List<Long> changedBookIds = bookCaseService.unOccupyProcess(List.of(bookCaseId));
 
@@ -199,7 +211,7 @@ class UnOccupyProcessTest {
         void unOccupy_noBooks_returnsEmpty() {
             long bookCaseId = createBookCase();
             BookOwnerVO owner = createBookOwner();
-            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3), 50000);
 
             List<Long> changedBookIds = bookCaseService.unOccupyProcess(List.of(bookCaseId));
 
@@ -211,7 +223,7 @@ class UnOccupyProcessTest {
         void unOccupy_mixedStates_onlyNormalChanged() {
             long bookCaseId = createBookCase();
             BookOwnerVO owner = createBookOwner();
-            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3), 50000);
             List<BookVO> books = registerBooks(bookCaseId, owner, 2);
 
             Long customerId = createCustomer();
@@ -221,6 +233,12 @@ class UnOccupyProcessTest {
             buyDto.setBuyTypeCommonCode("01");
             bookSoldRecordService.sellBooks(List.of(buyDto));
 
+            // 미정산 판매기록 정산 처리
+            SettlementRequestDto settleDto = new SettlementRequestDto();
+            settleDto.setBookOwnerId(owner.getId());
+            settleDto.setSaleRecordIds(List.of(books.get(0).getId()));
+            settlementService.settle(settleDto);
+
             List<Long> changedBookIds = bookCaseService.unOccupyProcess(List.of(bookCaseId));
 
             assertThat(changedBookIds).hasSize(1);
@@ -229,6 +247,75 @@ class UnOccupyProcessTest {
 
             BookVO soldBook = bookMapper.selectById(books.get(0).getId());
             assertThat(soldBook.getState()).isEqualTo(BookState.SOLD.name());
+        }
+    }
+
+    @Nested
+    @DisplayName("보증금 반환 케이스")
+    class DepositReturnCase {
+
+        @Test
+        @DisplayName("퇴거 후 활성 점유 없음 - 보증금 RETURNED 처리")
+        void unOccupy_noActiveOccupation_depositReturned() {
+            long bookCaseId = createBookCase();
+            BookOwnerVO owner = createBookOwner();
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3), 50000);
+
+            bookCaseService.unOccupyProcess(List.of(bookCaseId));
+
+            DepositVO deposit = depositMapper.selectByBookOwnerId(owner.getId());
+            assertThat(deposit.getStatus()).isEqualTo("RETURNED");
+            assertThat(deposit.getRemainingAmount()).isEqualTo(50000);
+        }
+
+        @Test
+        @DisplayName("책장 2개 중 1개만 퇴거 - 보증금 유지 (HELD)")
+        void unOccupy_oneOfTwo_depositKept() {
+            long bookCaseId1 = createBookCase();
+            long bookCaseId2 = createBookCase();
+            BookOwnerVO owner = createBookOwner();
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId1), LocalDate.now().plusMonths(3), 50000);
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId2), LocalDate.now().plusMonths(3), 30000);
+
+            bookCaseService.unOccupyProcess(List.of(bookCaseId1));
+
+            DepositVO deposit = depositMapper.selectByBookOwnerId(owner.getId());
+            assertThat(deposit.getStatus()).isEqualTo("HELD");
+            assertThat(deposit.getAmount()).isEqualTo(80000);
+        }
+
+        @Test
+        @DisplayName("책장 2개 전부 퇴거 - 보증금 RETURNED")
+        void unOccupy_allBookCases_depositReturned() {
+            long bookCaseId1 = createBookCase();
+            long bookCaseId2 = createBookCase();
+            BookOwnerVO owner = createBookOwner();
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId1), LocalDate.now().plusMonths(3), 50000);
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId2), LocalDate.now().plusMonths(3), 30000);
+
+            bookCaseService.unOccupyProcess(List.of(bookCaseId1, bookCaseId2));
+
+            DepositVO deposit = depositMapper.selectByBookOwnerId(owner.getId());
+            assertThat(deposit.getStatus()).isEqualTo("RETURNED");
+        }
+
+        @Test
+        @DisplayName("소진된 보증금(DEPLETED)도 퇴거 시 RETURNED 처리")
+        void unOccupy_depletedDeposit_returned() {
+            long bookCaseId = createBookCase();
+            BookOwnerVO owner = createBookOwner();
+            bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3), 50000);
+
+            // 보증금을 소진 상태로 변경
+            DepositVO deposit = depositMapper.selectByBookOwnerId(owner.getId());
+            deposit.setRemainingAmount(0);
+            deposit.setStatus("DEPLETED");
+            depositMapper.update(deposit);
+
+            bookCaseService.unOccupyProcess(List.of(bookCaseId));
+
+            DepositVO after = depositMapper.selectByBookOwnerId(owner.getId());
+            assertThat(after.getStatus()).isEqualTo("RETURNED");
         }
     }
 

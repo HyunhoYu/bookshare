@@ -36,7 +36,7 @@
         )
     </select>
 
-    <select id="selectMyOccupyingBookCasesByBookOwnerId" resultType="List">
+    <select id="selectMyOccupyingBookCasesByBookOwnerId" resultType="long">
         SELECT BC.ID
         FROM BOOK_CASE BC
         JOIN BOOK_CASE_OCCUPIED_RECORD OC ON BC.ID = OC.BOOK_CASE_ID

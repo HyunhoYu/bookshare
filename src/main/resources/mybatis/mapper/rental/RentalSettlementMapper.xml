@@ -105,7 +105,7 @@
         SET STATUS = #{status},
             DEDUCTED_AMOUNT = #{deductedAmount},
             REMAINING_AMOUNT = #{remainingAmount},
-            PAID_AT = #{paidAt}
+            PAID_AT = #{paidAt,jdbcType=TIMESTAMP}
         WHERE ID = #{id}
     </update>
 

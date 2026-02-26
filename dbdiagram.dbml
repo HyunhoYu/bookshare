@@ -314,3 +314,91 @@ Ref FK_BSR_COMMON_CODE: BOOK_SALE_RECORD.(GROUP_CODE_ID, COMMON_CODE_ID) > COMMO
 
 // BOOK_SALE_RECORD -> BOOK (1:1, ID 공유)
 Ref FK_BSR_BOOK: BOOK_SALE_RECORD.ID - BOOK.ID
+
+
+
+
+// ============================================================
+// BOOK_OWNER_PROFILE (BookOwner 소개글, 1:1)
+// ============================================================
+
+Table BOOK_OWNER_PROFILE {
+  BOOK_OWNER_ID NUMBER [pk, ref: - BOOK_OWNER.ID, note: '1:1 관계']
+  NICKNAME VARCHAR2(50) [unique, not null, note: 'UQ_BOP_NICKNAME']
+  FAVORITE_BOOKS VARCHAR2(500) [note: '좋아하는 책들 (자유 텍스트)']
+  FAVORITE_AUTHORS VARCHAR2(500) [note: '좋아하는 작가들']
+  FAVORITE_GENRES VARCHAR2(500) [note: '좋아하는 장르들']
+  CREATED_AT TIMESTAMP [not null, default: 'SYSTIMESTAMP']
+  UPDATED_AT TIMESTAMP
+
+  Note: '''
+  BookOwner 소개글/프로필.
+  BOOK_OWNER와 1:1 (BANK_ACCOUNT와 동일 패턴).
+  NICKNAME은 전역 유일.
+  '''
+}
+
+// ============================================================
+// BOOK_OWNER_POST (게시글 - 인스타 피드 스타일)
+// ============================================================
+
+Table BOOK_OWNER_POST {
+  ID NUMBER [pk, increment, note: '시퀀스명은 테이블 생성 후 조회']
+  BOOK_OWNER_ID NUMBER [not null, ref: > BOOK_OWNER.ID]
+  BOOK_ID NUMBER [ref: > BOOK.ID, note: 'nullable, 특정 책 홍보 시 연결']
+  TITLE VARCHAR2(200) [not null]
+  CONTENT VARCHAR2(4000)
+  CREATED_AT TIMESTAMP [not null, default: 'SYSTIMESTAMP']
+  UPDATED_AT TIMESTAMP
+  DELETED_AT TIMESTAMP [note: 'NULL이면 활성 (소프트 삭제)']
+
+  Note: '''
+  BookOwner 게시글 (인스타 피드 스타일).
+  BOOK_ID로 특정 책을 홍보할 수 있음 (선택사항).
+  소프트 삭제: DELETED_AT IS NULL인 행만 활성.
+  '''
+}
+
+// ============================================================
+// POST_COMMENT (댓글 + 1단계 대댓글)
+// ============================================================
+
+Table POST_COMMENT {
+  ID NUMBER [pk, increment, note: '시퀀스명은 테이블 생성 후 조회']
+  POST_ID NUMBER [not null, ref: > BOOK_OWNER_POST.ID]
+  USER_ID NUMBER [not null, ref: > USERS.ID, note: '모든 역할 댓글 가능']
+  PARENT_ID NUMBER [ref: > POST_COMMENT.ID, note: 'NULL=댓글, NOT NULL=대댓글 (1단계만)']
+  CONTENT VARCHAR2(1000) [not null]
+  CREATED_AT TIMESTAMP [not null, default: 'SYSTIMESTAMP']
+  UPDATED_AT TIMESTAMP
+  DELETED_AT TIMESTAMP [note: 'NULL이면 활성 (소프트 삭제)']
+
+  Note: '''
+  게시글 댓글 테이블.
+  PARENT_ID가 NULL이면 최상위 댓글, NOT NULL이면 대댓글.
+  1단계 대댓글만 허용 (PARENT의 PARENT_ID는 반드시 NULL, 앱 레벨 검증).
+  모든 인증 사용자(ADMIN, BOOK_OWNER, CUSTOMER, EMPLOYEE) 작성 가능.
+  소프트 삭제 지원.
+  '''
+}
+
+// ============================================================
+// FOLLOW (고객 → BookOwner 팔로우)
+// ============================================================
+
+Table FOLLOW {
+  ID NUMBER [pk, increment, note: '시퀀스명은 테이블 생성 후 조회']
+  CUSTOMER_ID NUMBER [not null, ref: > CUSTOMER.ID]
+  BOOK_OWNER_ID NUMBER [not null, ref: > BOOK_OWNER.ID]
+  CREATED_AT TIMESTAMP [not null, default: 'SYSTIMESTAMP']
+
+  indexes {
+    (CUSTOMER_ID, BOOK_OWNER_ID) [unique, name: 'UQ_FOLLOW_PAIR', note: '중복 팔로우 방지']
+  }
+
+  Note: '''
+  고객의 BookOwner 팔로우 관계.
+  UNIQUE(CUSTOMER_ID, BOOK_OWNER_ID)로 중복 방지.
+  언팔로우 시 hard DELETE (이력 불필요).
+  '''
+}

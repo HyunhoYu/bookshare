@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.bookowner_profile.BookOwnerProfileMapper">
+
+    <resultMap id="profileResultMap" type="my.domain.bookowner_profile.BookOwnerProfileVO">
+        <id property="bookOwnerId" column="BOOK_OWNER_ID"/>
+        <result property="nickname" column="NICKNAME"/>
+        <result property="favoriteBooks" column="FAVORITE_BOOKS"/>
+        <result property="favoriteAuthors" column="FAVORITE_AUTHORS"/>
+        <result property="favoriteGenres" column="FAVORITE_GENRES"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="bookOwnerName" column="BOOK_OWNER_NAME"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="my.domain.bookowner_profile.BookOwnerProfileVO">
+        INSERT INTO BOOK_OWNER_PROFILE (BOOK_OWNER_ID, NICKNAME, FAVORITE_BOOKS, FAVORITE_AUTHORS, FAVORITE_GENRES)
+        VALUES (#{bookOwnerId}, #{nickname}, #{favoriteBooks,jdbcType=VARCHAR}, #{favoriteAuthors,jdbcType=VARCHAR}, #{favoriteGenres,jdbcType=VARCHAR})
+    </insert>
+
+    <update id="update" parameterType="my.domain.bookowner_profile.BookOwnerProfileVO">
+        UPDATE BOOK_OWNER_PROFILE
+        SET NICKNAME = #{nickname},
+            FAVORITE_BOOKS = #{favoriteBooks,jdbcType=VARCHAR},
+            FAVORITE_AUTHORS = #{favoriteAuthors,jdbcType=VARCHAR},
+            FAVORITE_GENRES = #{favoriteGenres,jdbcType=VARCHAR},
+            UPDATED_AT = SYSTIMESTAMP
+        WHERE BOOK_OWNER_ID = #{bookOwnerId}
+    </update>
+
+    <select id="selectByBookOwnerId" parameterType="long" resultMap="profileResultMap">
+        SELECT P.*, U.NAME AS BOOK_OWNER_NAME
+        FROM BOOK_OWNER_PROFILE P
+        JOIN USERS U ON P.BOOK_OWNER_ID = U.ID
+        WHERE P.BOOK_OWNER_ID = #{bookOwnerId}
+          AND U.DELETED_AT IS NULL
+    </select>
+
+    <select id="selectByNickname" parameterType="string" resultMap="profileResultMap">
+        SELECT P.*, U.NAME AS BOOK_OWNER_NAME
+        FROM BOOK_OWNER_PROFILE P
+        JOIN USERS U ON P.BOOK_OWNER_ID = U.ID
+        WHERE P.NICKNAME = #{nickname}
+          AND U.DELETED_AT IS NULL
+    </select>
+
+</mapper>

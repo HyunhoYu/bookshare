@@ -8,7 +8,10 @@ import my.common.exception.ErrorCode;
 import my.domain.book.BookMapper;
 import my.domain.book.BookVO;
 import my.domain.bookcase.*;
+import my.domain.booksoldrecord.BookSoldRecordMapper;
 import my.domain.bookcasetype.BookCaseTypeMapper;
+import my.domain.deposit.DepositMapper;
+import my.domain.deposit.DepositVO;
 import my.domain.bookcasetype.BookCaseTypeVO;
 import my.domain.code.CommonCodeMapper;
 import my.domain.rental.service.RentalSettlementService;
@@ -32,6 +35,8 @@ public class BookCaseServiceImpl implements BookCaseService {
     private final BookMapper bookMapper;
     private final CommonCodeMapper commonCodeMapper;
     private final RentalSettlementService rentalSettlementService;
+    private final BookSoldRecordMapper bookSoldRecordMapper;
+    private final DepositMapper depositMapper;
 
     @Override
     public long create(BookCaseCreateDto dto) {
@@ -80,7 +85,7 @@ public class BookCaseServiceImpl implements BookCaseService {
 
     @Override
     @Transactional
-    public List<BookCaseOccupiedRecordVO> occupy(Long bookOwnerId, List<Long> bookCaseIds, LocalDate expirationDate) {
+    public List<BookCaseOccupiedRecordVO> occupy(Long bookOwnerId, List<Long> bookCaseIds, LocalDate expirationDate, int depositAmount) {
         List<BookCaseOccupiedRecordVO> results = new ArrayList<>();
 
         for (Long bookCaseId : bookCaseIds) {
@@ -100,9 +105,24 @@ public class BookCaseServiceImpl implements BookCaseService {
             record.setExpirationDate(expirationDate);
 
             occupiedRecordMapper.insert(record);
-            // TODO: Phase 2에서 DepositMapper.insert()로 보증금 INSERT 추가 (amount = monthlyPrice)
             rentalSettlementService.generateSettlements(record.getId(), bookOwnerId, LocalDate.now(), expirationDate, monthlyPrice);
             results.add(occupiedRecordMapper.selectById(record.getId()));
+        }
+
+        DepositVO deposit = depositMapper.selectByBookOwnerId(bookOwnerId);
+        if (deposit == null) {
+            deposit = new DepositVO();
+            deposit.setBookOwnerId(bookOwnerId);
+            deposit.setAmount(depositAmount);
+            deposit.setRemainingAmount(depositAmount);
+            deposit.setStatus("HELD");
+            if (depositMapper.insert(deposit) != 1) {
+                throw new ApplicationException(ErrorCode.DEPOSIT_INSERT_FAIL);
+            }
+        } else {
+            deposit.setAmount(deposit.getAmount() + depositAmount);
+            deposit.setRemainingAmount(deposit.getRemainingAmount() + depositAmount);
+            depositMapper.update(deposit);
         }
 
         return results;
@@ -182,9 +202,13 @@ public class BookCaseServiceImpl implements BookCaseService {
     public List<Long> unOccupyProcess(List<Long> bookCaseIds) {
         validateBookCaseIdsNotEmpty(bookCaseIds);
 
+        List<Long> bookOwnerIds = new ArrayList<>();
         for (Long bookCaseId : bookCaseIds) {
             validateBookCaseExists(bookCaseId);
-            validateCurrentlyOccupied(occupiedRecordMapper.selectCurrentByBookCaseId(bookCaseId));
+            BookCaseOccupiedRecordVO record = occupiedRecordMapper.selectCurrentByBookCaseId(bookCaseId);
+            validateCurrentlyOccupied(record);
+            validateNoUnsettledSaleRecords(bookCaseId);
+            bookOwnerIds.add(record.getBookOwnerId());
         }
 
         int result = occupiedRecordMapper.unOccupyBookCases(bookCaseIds);
@@ -195,7 +219,23 @@ public class BookCaseServiceImpl implements BookCaseService {
             bookMapper.updateStateNormalToRetrieve(bookIds);
         }
 
+        // 퇴거 후 활성 점유가 없는 BookOwner의 보증금 반환 처리
+        for (Long bookOwnerId : bookOwnerIds.stream().distinct().toList()) {
+            returnDepositIfNoActiveOccupation(bookOwnerId);
+        }
+
         return bookIds;
+    }
+
+    private void returnDepositIfNoActiveOccupation(Long bookOwnerId) {
+        List<Long> remaining = bookCaseMapper.selectMyOccupyingBookCasesByBookOwnerId(bookOwnerId);
+        if (remaining.isEmpty()) {
+            DepositVO deposit = depositMapper.selectByBookOwnerId(bookOwnerId);
+            if (deposit != null && !"RETURNED".equals(deposit.getStatus())) {
+                deposit.setStatus("RETURNED");
+                depositMapper.update(deposit);
+            }
+        }
     }
 
 
@@ -208,6 +248,13 @@ public class BookCaseServiceImpl implements BookCaseService {
 
     private void validateCurrentlyOccupied(BookCaseOccupiedRecordVO record) {
         requireNonNull(record, ErrorCode.BOOK_CASE_NOT_OCCUPIED);
+    }
+
+    private void validateNoUnsettledSaleRecords(Long bookCaseId) {
+        int count = bookSoldRecordMapper.countUnsettledByBookCaseId(bookCaseId);
+        if (count > 0) {
+            throw new ApplicationException(ErrorCode.UNSETTLED_SALE_RECORD_EXISTS);
+        }
     }
 
     private void validateUnoccupyResult(int result, int expected) {

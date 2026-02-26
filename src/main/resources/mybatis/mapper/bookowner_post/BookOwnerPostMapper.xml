@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.bookowner_post.BookOwnerPostMapper">
+
+    <resultMap id="postResultMap" type="my.domain.bookowner_post.BookOwnerPostVO">
+        <id property="id" column="ID"/>
+        <result property="bookOwnerId" column="BOOK_OWNER_ID"/>
+        <result property="bookId" column="BOOK_ID"/>
+        <result property="title" column="TITLE"/>
+        <result property="content" column="CONTENT"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="deletedAt" column="DELETED_AT"/>
+        <result property="bookOwnerName" column="BOOK_OWNER_NAME"/>
+        <result property="bookOwnerNickname" column="BOOK_OWNER_NICKNAME"/>
+        <result property="bookName" column="BOOK_NAME"/>
+    </resultMap>
+
+    <sql id="postDetailSelect">
+        SELECT P.ID, P.BOOK_OWNER_ID, P.BOOK_ID, P.TITLE, P.CONTENT,
+               P.CREATED_AT, P.UPDATED_AT,
+               U.NAME AS BOOK_OWNER_NAME,
+               BOP.NICKNAME AS BOOK_OWNER_NICKNAME,
+               B.BOOK_NAME AS BOOK_NAME
+        FROM BOOK_OWNER_POST P
+        JOIN USERS U ON P.BOOK_OWNER_ID = U.ID
+        LEFT JOIN BOOK_OWNER_PROFILE BOP ON P.BOOK_OWNER_ID = BOP.BOOK_OWNER_ID
+        LEFT JOIN BOOK B ON P.BOOK_ID = B.ID
+        WHERE P.DELETED_AT IS NULL
+          AND U.DELETED_AT IS NULL
+    </sql>
+
+    <insert id="insert" parameterType="my.domain.bookowner_post.BookOwnerPostVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78832".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO BOOK_OWNER_POST (BOOK_OWNER_ID, BOOK_ID, TITLE, CONTENT)
+        VALUES (#{bookOwnerId}, #{bookId,jdbcType=NUMERIC}, #{title}, #{content,jdbcType=VARCHAR})
+    </insert>
+
+    <update id="update" parameterType="my.domain.bookowner_post.BookOwnerPostVO">
+        UPDATE BOOK_OWNER_POST
+        SET TITLE = #{title},
+            CONTENT = #{content,jdbcType=VARCHAR},
+            BOOK_ID = #{bookId,jdbcType=NUMERIC},
+            UPDATED_AT = SYSTIMESTAMP
+        WHERE ID = #{id} AND DELETED_AT IS NULL
+    </update>
+
+    <update id="softDelete" parameterType="long">
+        UPDATE BOOK_OWNER_POST
+        SET DELETED_AT = SYSTIMESTAMP
+        WHERE ID = #{id} AND DELETED_AT IS NULL
+    </update>
+
+    <select id="selectById" parameterType="long" resultMap="postResultMap">
+        <include refid="postDetailSelect"/>
+        AND P.ID = #{id}
+    </select>
+
+    <select id="selectByBookOwnerId" parameterType="long" resultMap="postResultMap">
+        <include refid="postDetailSelect"/>
+        AND P.BOOK_OWNER_ID = #{bookOwnerId}
+        ORDER BY P.CREATED_AT DESC
+    </select>
+
+    <select id="selectAll" resultMap="postResultMap">
+        <include refid="postDetailSelect"/>
+        ORDER BY P.CREATED_AT DESC
+    </select>
+
+    <select id="selectFeedByCustomerId" parameterType="long" resultMap="postResultMap">
+        <include refid="postDetailSelect"/>
+        AND P.BOOK_OWNER_ID IN (
+            SELECT F.BOOK_OWNER_ID FROM FOLLOW F WHERE F.CUSTOMER_ID = #{customerId}
+        )
+        ORDER BY P.CREATED_AT DESC
+    </select>
+
+</mapper>

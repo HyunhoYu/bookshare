@@ -20,7 +20,13 @@
       "Bash(wc:*)",
       "Bash(curl:*)",
       "Bash(npm run build:*)",
-      "WebFetch(domain:www.tosspayments.com)"
+      "WebFetch(domain:www.tosspayments.com)",
+      "Bash(printf ALTER TABLE DEPOSIT DROP COLUMN OCCUPIED_RECORD_ID;\\\\nALTER TABLE DEPOSIT DROP COLUMN DEDUCTED_AMOUNT;\\\\nALTER TABLE DEPOSIT DROP COLUMN RETURNED_AT;\\\\nEXIT;\\\\n:*)",
+      "Bash(printf SELECT COLUMN_NAME, DATA_DEFAULT, NULLABLE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = 'RENTAL_SETTLEMENT' AND COLUMN_NAME = 'DEDUCTED_AMOUNT' AND OWNER = 'SYSTEM';\\\\nEXIT;\\\\n:*)",
+      "Bash(printf SELECT COLUMN_NAME, DATA_DEFAULT, NULLABLE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME='RENTAL_SETTLEMENT' AND COLUMN_NAME='DEDUCTED_AMOUNT' AND OWNER='SYSTEM';\\\\nEXIT;\\\\n:*)",
+      "Bash(head:*)",
+      "Bash(sed:*)",
+      "Bash(cd:*)"
     ]
   }
 }

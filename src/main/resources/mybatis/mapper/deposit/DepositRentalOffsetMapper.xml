@@ -11,4 +11,11 @@
         VALUES (#{depositId}, #{rentalSettlementId}, #{offsetAmount})
     </insert>
 
+    <select id="selectByDepositId" parameterType="long" resultType="my.domain.deposit.DepositRentalOffsetVO">
+        SELECT ID, DEPOSIT_ID, RENTAL_SETTLEMENT_ID, OFFSET_AMOUNT, CREATED_AT
+        FROM DEPOSIT_RENTAL_OFFSET
+        WHERE DEPOSIT_ID = #{depositId}
+        ORDER BY ID ASC
+    </select>
+
 </mapper>

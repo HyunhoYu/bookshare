@@ -96,7 +96,7 @@ class FindUnsettledByBookOwnerTest {
                 .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3), 50000);
 
         return owner;
     }
@@ -173,7 +173,7 @@ class FindUnsettledByBookOwnerTest {
                 .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3), 50000);
 
         BookRegisterDto bookDto = new BookRegisterDto();
         bookDto.setUserName(ownerName);
@@ -223,7 +223,7 @@ class FindUnsettledByBookOwnerTest {
                 .bankName("국민은행")
                 .accountNumber("123-456-789")
                 .build());
-        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3), 50000);
 
         List<Long> soldBookIds = new java.util.ArrayList<>();
         for (int i = 0; i < bookNames.size(); i++) {

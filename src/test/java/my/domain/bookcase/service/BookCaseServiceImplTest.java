@@ -217,7 +217,7 @@ class BookCaseServiceImplTest {
         long caseId = bookCaseService.create(createDto("01", typeId));
         BookOwnerVO owner = createBookOwner("occupy-success@test.com");
 
-        bookCaseService.occupy(owner.getId(), List.of(caseId), LocalDate.now().plusMonths(3));
+        bookCaseService.occupy(owner.getId(), List.of(caseId), LocalDate.now().plusMonths(3), 50000);
 
         assertThat(bookCaseService.isOccupied(caseId)).isTrue();
         BookCaseOccupiedRecordVO record = occupiedRecordMapper.selectCurrentByBookCaseId(caseId);
@@ -233,9 +233,9 @@ class BookCaseServiceImplTest {
         BookOwnerVO owner1 = createBookOwner("occupy-first@test.com");
         BookOwnerVO owner2 = createBookOwner("occupy-second@test.com");
 
-        bookCaseService.occupy(owner1.getId(), List.of(caseId), LocalDate.now().plusMonths(3));
+        bookCaseService.occupy(owner1.getId(), List.of(caseId), LocalDate.now().plusMonths(3), 50000);
 
-        assertThatThrownBy(() -> bookCaseService.occupy(owner2.getId(), List.of(caseId), LocalDate.now().plusMonths(3)))
+        assertThatThrownBy(() -> bookCaseService.occupy(owner2.getId(), List.of(caseId), LocalDate.now().plusMonths(3), 50000))
                 .isInstanceOf(ApplicationException.class);
     }
 
@@ -247,14 +247,14 @@ class BookCaseServiceImplTest {
         BookOwnerVO owner2 = createBookOwner("occupy-release2@test.com");
 
         // owner1 점유
-        bookCaseService.occupy(owner1.getId(), List.of(caseId), LocalDate.now().plusMonths(3));
+        bookCaseService.occupy(owner1.getId(), List.of(caseId), LocalDate.now().plusMonths(3), 50000);
 
         // owner1 해제
         BookCaseOccupiedRecordVO record = occupiedRecordMapper.selectCurrentByBookCaseId(caseId);
         occupiedRecordMapper.updateUnOccupiedAt(record.getId());
 
         // owner2 점유 성공
-        bookCaseService.occupy(owner2.getId(), List.of(caseId), LocalDate.now().plusMonths(3));
+        bookCaseService.occupy(owner2.getId(), List.of(caseId), LocalDate.now().plusMonths(3), 50000);
 
         assertThat(bookCaseService.isOccupied(caseId)).isTrue();
         BookCaseOccupiedRecordVO current = occupiedRecordMapper.selectCurrentByBookCaseId(caseId);
@@ -268,7 +268,7 @@ class BookCaseServiceImplTest {
         long caseId2 = bookCaseService.create(createDto("02", typeId));
         BookOwnerVO owner = createBookOwner("occupy-usable@test.com");
 
-        bookCaseService.occupy(owner.getId(), List.of(caseId1), LocalDate.now().plusMonths(3));
+        bookCaseService.occupy(owner.getId(), List.of(caseId1), LocalDate.now().plusMonths(3), 50000);
 
         List<BookCaseVO> usable = bookCaseService.findUsable();
         assertThat(usable).extracting(BookCaseVO::getId)
@@ -281,7 +281,7 @@ class BookCaseServiceImplTest {
     void occupy_bookCaseNotFound_throwsException() {
         BookOwnerVO owner = createBookOwner("occupy-notfound@test.com");
 
-        assertThatThrownBy(() -> bookCaseService.occupy(owner.getId(), List.of(999999L), LocalDate.now().plusMonths(3)))
+        assertThatThrownBy(() -> bookCaseService.occupy(owner.getId(), List.of(999999L), LocalDate.now().plusMonths(3), 50000))
                 .isInstanceOf(ApplicationException.class);
     }
 }

@@ -100,6 +100,14 @@
         WHERE BSR.BOOK_OWNER_SETTLEMENT_ID IS NULL
     </select>
 
+    <select id="countUnsettledByBookCaseId" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM BOOK_SALE_RECORD BSR
+        JOIN BOOK B ON BSR.ID = B.ID
+        WHERE B.BOOK_CASE_ID = #{bookCaseId}
+          AND BSR.BOOK_OWNER_SETTLEMENT_ID IS NULL
+    </select>
+
     <select id="sumAmountsByIds" resultType="map">
         SELECT
             NVL(SUM(BSR.SOLD_PRICE), 0) as "totalAmount",

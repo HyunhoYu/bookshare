@@ -55,6 +55,29 @@ public enum ErrorCode {
     RENTAL_SETTLEMENT_INSERT_FAIL("임대료 정산 레코드 생성 실패", 500),
     RENTAL_SETTLEMENT_NOT_FOUND("존재하지 않는 임대료 정산 레코드입니다", 404),
     RENTAL_SETTLEMENT_ALREADY_PAID("이미 납부된 임대료입니다", 409),
+    UNSETTLED_SALE_RECORD_EXISTS("미정산 판매기록이 존재하여 임대 종료할 수 없습니다", 400),
+    DEPOSIT_INSERT_FAIL("보증금 저장 실패", 500),
+
+    // Profile
+    PROFILE_ALREADY_EXISTS("이미 프로필이 존재합니다", 409),
+    PROFILE_NOT_FOUND("프로필이 존재하지 않습니다", 404),
+    PROFILE_INSERT_FAIL("프로필 저장 실패", 500),
+    DUPLICATE_NICKNAME("이미 사용 중인 닉네임입니다", 409),
+
+    // Post
+    POST_NOT_FOUND("존재하지 않는 게시글입니다", 404),
+    POST_INSERT_FAIL("게시글 저장 실패", 500),
+    POST_BOOK_OWNER_MISMATCH("본인의 책만 게시글에 연결할 수 있습니다", 400),
+
+    // Comment
+    COMMENT_NOT_FOUND("존재하지 않는 댓글입니다", 404),
+    COMMENT_INSERT_FAIL("댓글 저장 실패", 500),
+    COMMENT_NOT_REPLY_TARGET("대댓글에는 답글을 달 수 없습니다", 400),
+
+    // Follow
+    ALREADY_FOLLOWING("이미 팔로우 중입니다", 409),
+    NOT_FOLLOWING("팔로우하지 않은 책소유주입니다", 400),
+    FOLLOW_INSERT_FAIL("팔로우 저장 실패", 500),
     ;
 
     private final String message;

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.follow.FollowMapper">
+
+    <resultMap id="followResultMap" type="my.domain.follow.FollowVO">
+        <id property="id" column="ID"/>
+        <result property="customerId" column="CUSTOMER_ID"/>
+        <result property="bookOwnerId" column="BOOK_OWNER_ID"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="bookOwnerName" column="BOOK_OWNER_NAME"/>
+        <result property="bookOwnerNickname" column="BOOK_OWNER_NICKNAME"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="my.domain.follow.FollowVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78838".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO FOLLOW (CUSTOMER_ID, BOOK_OWNER_ID)
+        VALUES (#{customerId}, #{bookOwnerId})
+    </insert>
+
+    <delete id="deleteByCustomerIdAndBookOwnerId">
+        DELETE FROM FOLLOW
+        WHERE CUSTOMER_ID = #{customerId} AND BOOK_OWNER_ID = #{bookOwnerId}
+    </delete>
+
+    <select id="selectByCustomerIdAndBookOwnerId" resultMap="followResultMap">
+        SELECT * FROM FOLLOW
+        WHERE CUSTOMER_ID = #{customerId} AND BOOK_OWNER_ID = #{bookOwnerId}
+    </select>
+
+    <select id="selectByCustomerId" parameterType="long" resultMap="followResultMap">
+        SELECT F.ID, F.CUSTOMER_ID, F.BOOK_OWNER_ID, F.CREATED_AT,
+               U.NAME AS BOOK_OWNER_NAME,
+               BOP.NICKNAME AS BOOK_OWNER_NICKNAME
+        FROM FOLLOW F
+        JOIN USERS U ON F.BOOK_OWNER_ID = U.ID
+        LEFT JOIN BOOK_OWNER_PROFILE BOP ON F.BOOK_OWNER_ID = BOP.BOOK_OWNER_ID
+        WHERE F.CUSTOMER_ID = #{customerId}
+          AND U.DELETED_AT IS NULL
+        ORDER BY F.CREATED_AT DESC
+    </select>
+
+    <select id="countByBookOwnerId" parameterType="long" resultType="int">
+        SELECT COUNT(*) FROM FOLLOW WHERE BOOK_OWNER_ID = #{bookOwnerId}
+    </select>
+
+</mapper>

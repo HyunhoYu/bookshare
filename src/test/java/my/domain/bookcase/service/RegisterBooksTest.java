@@ -72,7 +72,7 @@ class RegisterBooksTest {
                 .build());
 
         // 책장 점유
-        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3));
+        bookCaseService.occupy(owner.getId(), List.of(bookCaseId), LocalDate.now().plusMonths(3), 50000);
     }
 
     private BookRegisterDto createDto(String bookName, String publisherHouse, int price, String bookTypeCode) {
@@ -173,7 +173,7 @@ class RegisterBooksTest {
         otherDto.setLocationCode("03");
         otherDto.setBookCaseTypeId(typeId);
         long otherCaseId = bookCaseService.create(otherDto);
-        bookCaseService.occupy(otherOwner.getId(), List.of(otherCaseId), LocalDate.now().plusMonths(3));
+        bookCaseService.occupy(otherOwner.getId(), List.of(otherCaseId), LocalDate.now().plusMonths(3), 50000);
 
         // 홍길동 이름으로 김철수의 책장에 등록 시도
         List<BookRegisterDto> dtos = List.of(

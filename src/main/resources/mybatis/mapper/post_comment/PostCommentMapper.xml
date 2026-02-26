@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.post_comment.PostCommentMapper">
+
+    <resultMap id="commentResultMap" type="my.domain.post_comment.PostCommentVO">
+        <id property="id" column="ID"/>
+        <result property="postId" column="POST_ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="parentId" column="PARENT_ID"/>
+        <result property="content" column="CONTENT"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="deletedAt" column="DELETED_AT"/>
+        <result property="userName" column="USER_NAME"/>
+        <result property="userRole" column="USER_ROLE"/>
+    </resultMap>
+
+    <sql id="commentDetailSelect">
+        SELECT C.ID, C.POST_ID, C.USER_ID, C.PARENT_ID, C.CONTENT,
+               C.CREATED_AT, C.UPDATED_AT,
+               U.NAME AS USER_NAME,
+               U.ROLE AS USER_ROLE
+        FROM POST_COMMENT C
+        JOIN USERS U ON C.USER_ID = U.ID
+        WHERE C.DELETED_AT IS NULL
+          AND U.DELETED_AT IS NULL
+    </sql>
+
+    <insert id="insert" parameterType="my.domain.post_comment.PostCommentVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78835".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO POST_COMMENT (POST_ID, USER_ID, PARENT_ID, CONTENT)
+        VALUES (#{postId}, #{userId}, #{parentId,jdbcType=NUMERIC}, #{content})
+    </insert>
+
+    <update id="update" parameterType="my.domain.post_comment.PostCommentVO">
+        UPDATE POST_COMMENT
+        SET CONTENT = #{content},
+            UPDATED_AT = SYSTIMESTAMP
+        WHERE ID = #{id} AND DELETED_AT IS NULL
+    </update>
+
+    <update id="softDelete" parameterType="long">
+        UPDATE POST_COMMENT
+        SET DELETED_AT = SYSTIMESTAMP
+        WHERE ID = #{id} AND DELETED_AT IS NULL
+    </update>
+
+    <select id="selectById" parameterType="long" resultMap="commentResultMap">
+        <include refid="commentDetailSelect"/>
+        AND C.ID = #{id}
+    </select>
+
+    <select id="selectTopLevelByPostId" parameterType="long" resultMap="commentResultMap">
+        <include refid="commentDetailSelect"/>
+        AND C.POST_ID = #{postId}
+        AND C.PARENT_ID IS NULL
+        ORDER BY C.CREATED_AT ASC
+    </select>
+
+    <select id="selectRepliesByParentId" parameterType="long" resultMap="commentResultMap">
+        <include refid="commentDetailSelect"/>
+        AND C.PARENT_ID = #{parentId}
+        ORDER BY C.CREATED_AT ASC
+    </select>
+
+</mapper>
