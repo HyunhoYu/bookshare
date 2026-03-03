@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.book_request.BookRequestMapper">
+
+    <resultMap id="bookRequestResultMap" type="my.domain.book_request.BookRequestVO">
+        <id property="id" column="ID"/>
+        <result property="customerId" column="CUSTOMER_ID"/>
+        <result property="isbn" column="ISBN"/>
+        <result property="bookTitle" column="BOOK_TITLE"/>
+        <result property="author" column="AUTHOR"/>
+        <result property="publisher" column="PUBLISHER"/>
+        <result property="thumbnailUrl" column="THUMBNAIL_URL"/>
+        <result property="status" column="STATUS"/>
+        <result property="adminComment" column="ADMIN_COMMENT"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="processedAt" column="PROCESSED_AT"/>
+        <result property="customerName" column="CUSTOMER_NAME"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="my.domain.book_request.BookRequestVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78846".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO BOOK_REQUEST (CUSTOMER_ID, ISBN, BOOK_TITLE, AUTHOR, PUBLISHER, THUMBNAIL_URL)
+        VALUES (#{customerId}, #{isbn}, #{bookTitle}, #{author}, #{publisher}, #{thumbnailUrl})
+    </insert>
+
+    <select id="selectById" parameterType="long" resultMap="bookRequestResultMap">
+        SELECT BR.*, U.NAME AS CUSTOMER_NAME
+        FROM BOOK_REQUEST BR
+        JOIN USERS U ON BR.CUSTOMER_ID = U.ID
+        WHERE BR.ID = #{id}
+    </select>
+
+    <select id="selectByCustomerId" parameterType="long" resultMap="bookRequestResultMap">
+        SELECT BR.*, U.NAME AS CUSTOMER_NAME
+        FROM BOOK_REQUEST BR
+        JOIN USERS U ON BR.CUSTOMER_ID = U.ID
+        WHERE BR.CUSTOMER_ID = #{customerId}
+        ORDER BY BR.CREATED_AT DESC
+    </select>
+
+    <select id="selectAll" resultMap="bookRequestResultMap">
+        SELECT BR.*, U.NAME AS CUSTOMER_NAME
+        FROM BOOK_REQUEST BR
+        JOIN USERS U ON BR.CUSTOMER_ID = U.ID
+        ORDER BY BR.CREATED_AT DESC
+    </select>
+
+    <update id="updateStatus" parameterType="my.domain.book_request.BookRequestVO">
+        UPDATE BOOK_REQUEST
+        SET STATUS = #{status},
+            ADMIN_COMMENT = #{adminComment},
+            PROCESSED_AT = SYSTIMESTAMP
+        WHERE ID = #{id}
+    </update>
+
+</mapper>

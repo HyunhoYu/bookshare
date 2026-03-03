@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.dashboard.DashboardMapper">
+
+    <resultMap id="bookCaseSalesResultMap" type="my.domain.dashboard.dto.BookCaseSalesDto">
+        <result property="bookCaseId" column="BOOK_CASE_ID"/>
+        <result property="locationName" column="LOCATION_NAME"/>
+        <result property="bookCaseTypeCode" column="BOOK_CASE_TYPE_CODE"/>
+        <result property="bookOwnerId" column="BOOK_OWNER_ID"/>
+        <result property="bookOwnerName" column="BOOK_OWNER_NAME"/>
+        <result property="soldCount" column="SOLD_COUNT"/>
+        <result property="totalSalesAmount" column="TOTAL_SALES_AMOUNT"/>
+    </resultMap>
+
+    <resultMap id="bookOwnerRankingResultMap" type="my.domain.dashboard.dto.BookOwnerRankingDto">
+        <result property="bookOwnerId" column="BOOK_OWNER_ID"/>
+        <result property="bookOwnerName" column="BOOK_OWNER_NAME"/>
+        <result property="nickname" column="NICKNAME"/>
+        <result property="followerCount" column="FOLLOWER_COUNT"/>
+        <result property="totalSalesAmount" column="TOTAL_SALES_AMOUNT"/>
+        <result property="soldCount" column="SOLD_COUNT"/>
+    </resultMap>
+
+    <!-- Last month book case sales: join BOOK_SALE_RECORD -> BOOK -> BOOK_CASE -> COMMON_CODE + BOOK_CASE_TYPE -->
+    <select id="selectBookCaseSalesByMonth" parameterType="string" resultMap="bookCaseSalesResultMap">
+        SELECT
+            BC.ID AS BOOK_CASE_ID,
+            CC.CODE_NAME AS LOCATION_NAME,
+            BCT.CODE AS BOOK_CASE_TYPE_CODE,
+            BCOR.BOOK_OWNER_ID AS BOOK_OWNER_ID,
+            U.NAME AS BOOK_OWNER_NAME,
+            COUNT(BSR.ID) AS SOLD_COUNT,
+            NVL(SUM(BSR.SOLD_PRICE), 0) AS TOTAL_SALES_AMOUNT
+        FROM BOOK_CASE BC
+        JOIN COMMON_CODE CC ON CC.GROUP_CODE = BC.GROUP_CODE_ID AND CC.CODE = BC.COMMON_CODE_ID
+        JOIN BOOK_CASE_TYPE BCT ON BC.BOOK_CASE_TYPE_ID = BCT.ID
+        LEFT JOIN BOOK_CASE_OCCUPIED_RECORD BCOR ON BCOR.BOOK_CASE_ID = BC.ID AND BCOR.UN_OCCUPIED_AT IS NULL
+        LEFT JOIN USERS U ON U.ID = BCOR.BOOK_OWNER_ID
+        LEFT JOIN BOOK B ON B.BOOK_CASE_ID = BC.ID AND B.DELETED_AT IS NULL
+        LEFT JOIN BOOK_SALE_RECORD BSR ON BSR.ID = B.ID
+            AND TO_CHAR(BSR.SOLD_AT, 'YYYY-MM') = #{targetMonth}
+        GROUP BY BC.ID, CC.CODE_NAME, BCT.CODE, BCOR.BOOK_OWNER_ID, U.NAME
+        ORDER BY TOTAL_SALES_AMOUNT DESC
+    </select>
+
+    <!-- BookOwner ranking by follower count -->
+    <select id="selectBookOwnerRankingByFollowers" resultMap="bookOwnerRankingResultMap">
+        SELECT
+            U.ID AS BOOK_OWNER_ID,
+            U.NAME AS BOOK_OWNER_NAME,
+            BOP.NICKNAME AS NICKNAME,
+            NVL(FC.FOLLOWER_COUNT, 0) AS FOLLOWER_COUNT,
+            NVL(SC.TOTAL_SALES_AMOUNT, 0) AS TOTAL_SALES_AMOUNT,
+            NVL(SC.SOLD_COUNT, 0) AS SOLD_COUNT
+        FROM USERS U
+        JOIN BOOK_OWNER BO ON U.ID = BO.ID
+        LEFT JOIN BOOK_OWNER_PROFILE BOP ON BO.ID = BOP.BOOK_OWNER_ID
+        LEFT JOIN (
+            SELECT BOOK_OWNER_ID, COUNT(*) AS FOLLOWER_COUNT
+            FROM FOLLOW
+            GROUP BY BOOK_OWNER_ID
+        ) FC ON BO.ID = FC.BOOK_OWNER_ID
+        LEFT JOIN (
+            SELECT B.BOOK_OWNER_ID,
+                   NVL(SUM(BSR.SOLD_PRICE), 0) AS TOTAL_SALES_AMOUNT,
+                   COUNT(BSR.ID) AS SOLD_COUNT
+            FROM BOOK B
+            JOIN BOOK_SALE_RECORD BSR ON BSR.ID = B.ID
+            GROUP BY B.BOOK_OWNER_ID
+        ) SC ON BO.ID = SC.BOOK_OWNER_ID
+        WHERE U.DELETED_AT IS NULL
+        ORDER BY FOLLOWER_COUNT DESC, TOTAL_SALES_AMOUNT DESC
+    </select>
+
+    <!-- BookOwner ranking by total sales amount -->
+    <select id="selectBookOwnerRankingBySales" resultMap="bookOwnerRankingResultMap">
+        SELECT
+            U.ID AS BOOK_OWNER_ID,
+            U.NAME AS BOOK_OWNER_NAME,
+            BOP.NICKNAME AS NICKNAME,
+            NVL(FC.FOLLOWER_COUNT, 0) AS FOLLOWER_COUNT,
+            NVL(SC.TOTAL_SALES_AMOUNT, 0) AS TOTAL_SALES_AMOUNT,
+            NVL(SC.SOLD_COUNT, 0) AS SOLD_COUNT
+        FROM USERS U
+        JOIN BOOK_OWNER BO ON U.ID = BO.ID
+        LEFT JOIN BOOK_OWNER_PROFILE BOP ON BO.ID = BOP.BOOK_OWNER_ID
+        LEFT JOIN (
+            SELECT BOOK_OWNER_ID, COUNT(*) AS FOLLOWER_COUNT
+            FROM FOLLOW
+            GROUP BY BOOK_OWNER_ID
+        ) FC ON BO.ID = FC.BOOK_OWNER_ID
+        LEFT JOIN (
+            SELECT B.BOOK_OWNER_ID,
+                   NVL(SUM(BSR.SOLD_PRICE), 0) AS TOTAL_SALES_AMOUNT,
+                   COUNT(BSR.ID) AS SOLD_COUNT
+            FROM BOOK B
+            JOIN BOOK_SALE_RECORD BSR ON BSR.ID = B.ID
+            GROUP BY B.BOOK_OWNER_ID
+        ) SC ON BO.ID = SC.BOOK_OWNER_ID
+        WHERE U.DELETED_AT IS NULL
+        ORDER BY TOTAL_SALES_AMOUNT DESC, FOLLOWER_COUNT DESC
+    </select>
+
+    <!-- Period profit: sales and operating profit for a date range -->
+    <select id="selectPeriodProfit" resultType="my.domain.dashboard.dto.PeriodProfitDto">
+        SELECT
+            NVL(SUM(BSR.SOLD_PRICE), 0) AS totalSales,
+            NVL(SUM(FLOOR(BSR.SOLD_PRICE * SR.OWNER_RATIO)), 0) AS ownerTotal,
+            NVL(SUM(BSR.SOLD_PRICE), 0)
+                - NVL(SUM(FLOOR(BSR.SOLD_PRICE * SR.OWNER_RATIO)), 0) AS operatingProfit,
+            COUNT(BSR.ID) AS soldCount
+        FROM BOOK_SALE_RECORD BSR
+        JOIN SETTLEMENT_RATIO SR ON BSR.RATIO_ID = SR.ID
+        WHERE BSR.SOLD_AT &gt;= TO_TIMESTAMP(#{startDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
+          AND BSR.SOLD_AT &lt; TO_TIMESTAMP(#{endDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS') + 1
+    </select>
+
+</mapper>

@@ -78,6 +78,20 @@ public enum ErrorCode {
     ALREADY_FOLLOWING("이미 팔로우 중입니다", 409),
     NOT_FOLLOWING("팔로우하지 않은 책소유주입니다", 400),
     FOLLOW_INSERT_FAIL("팔로우 저장 실패", 500),
+
+    // BookRequest
+    BOOK_REQUEST_NOT_FOUND("존재하지 않는 입고 요청입니다", 404),
+    BOOK_REQUEST_INSERT_FAIL("입고 요청 저장 실패", 500),
+    BOOK_REQUEST_ALREADY_PROCESSED("이미 처리된 입고 요청입니다", 409),
+
+    // Notification
+    NOTIFICATION_NOT_FOUND("존재하지 않는 알림입니다", 404),
+    NOTIFICATION_INSERT_FAIL("알림 저장 실패", 500),
+
+    // QnA
+    QNA_NOT_FOUND("존재하지 않는 QnA입니다", 404),
+    QNA_INSERT_FAIL("QnA 저장 실패", 500),
+    QNA_ALREADY_ANSWERED("이미 답변된 QnA입니다", 409),
     ;
 
     private final String message;

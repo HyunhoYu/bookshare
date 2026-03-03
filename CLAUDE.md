@@ -113,10 +113,60 @@ class XxxTest {
 - 각 도메인: VO + DTO + Mapper(XML) + Service(interface+impl) + Controller
 - 테스트: 5개 파일 52개 테스트 (프로필 11, 포스트 12, 댓글 10, 팔로우 12, 피드 7)
 - ERD: `dbdiagram.dbml`에 4개 테이블 추가 완료
+- Follow 추가 엔드포인트: `GET /api/follows/check/{bookOwnerId}` (boolean), `GET /api/follows/count/{bookOwnerId}` (int)
+
+### 완료: 책 입고 요청 + ISBN 검색 + 알림 시스템
+| 도메인 | 테이블 | 시퀀스 | 핵심 기능 |
+|---|---|---|---|
+| **BookRequest** | BOOK_REQUEST | ISEQ$$_78846 | 고객 입고 요청, 관리자 승인/거절, ISBN+THUMBNAIL_URL |
+| **Notification** | NOTIFICATION | ISEQ$$_78849 | 범용 알림 (type+referenceId), 읽음 처리 |
+| **IsbnSearch** | — | — | Naver Book Search API 연동 (Profile 분리: real/mock) |
+
+- BookRequest 생성 시 → 모든 ADMIN에게 NOTIFICATION 자동 발송
+- 상태 변경 시 → 요청 고객에게 NOTIFICATION 발송
+- ISBN 검색: `GET /api/books/search?query={검색어}`
+
+### 완료: 고객 QnA 게시판
+| 도메인 | 테이블 | 시퀀스 | 핵심 기능 |
+|---|---|---|---|
+| **QnA** | QNA | ISEQ$$_78856 | 고객 질문 + 관리자 답변, ANSWERED_BY(FK→USERS), UPDATED_AT |
+
+- 엔드포인트: POST /api/qna (CUSTOMER), GET /api/qna/my (CUSTOMER), GET /api/qna/{id} (ADMIN+CUSTOMER), GET /api/qna (ADMIN), PUT /api/qna/{id}/answer (ADMIN)
+- 알림: 질문 생성 → ADMIN에게 TYPE="QNA", 답변 → 고객에게 TYPE="QNA_ANSWER"
+- ErrorCode: QNA_NOT_FOUND(404), QNA_INSERT_FAIL(500), QNA_ALREADY_ANSWERED(409)
+
+### 완료: Admin 대시보드 통계 API
+| 엔드포인트 | 기능 |
+|---|---|
+| `GET /api/admin/dashboard/bookcase-sales?month=YYYY-MM` | 책장별 판매 요약 (BookOwner 포함) |
+| `GET /api/admin/dashboard/book-owner-ranking?sort=popularity\|sales` | BookOwner 랭킹 |
+| `GET /api/admin/dashboard/recent-book-requests?limit=5` | 최근 입고 요청 |
+| `GET /api/admin/dashboard/recent-qna?limit=5` | 최근 QnA |
+| `GET /api/admin/dashboard/period-profit?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` | 기간별 매출/영업이익 |
+
+- 기간별 매출 쿼리: `BOOK_SALE_RECORD JOIN SETTLEMENT_RATIO` → SUM(SOLD_PRICE), SUM(FLOOR(SOLD_PRICE * OWNER_RATIO))
+- DTO: `PeriodProfitDto` (startDate, endDate, totalSales, ownerTotal, operatingProfit, soldCount)
+
+### 프론트엔드 완료 작업
+- CustomerLayout + 라우팅, BookOwnerProfile/Post/Comment 페이지, Follow+Feed 페이지
+- 책 입고 요청 페이지 + 관리자 알림 표시, Admin 대시보드 리뉴얼, QnA 게시판 페이지
+
+## SETTLEMENT_RATIO 테이블의 실제 역할 (중요)
+**SETTLEMENT_RATIO는 "정산 실행 시 생성"이 아니라, "사전에 설정해두는 정산 비율 설정 테이블"이다.**
+
+- 관리자가 `POST /api/settlement-ratios`로 비율을 미리 등록 (예: ownerRatio=0.7, storeRatio=0.3)
+- 가장 최근 레코드(ID DESC)가 현재 적용 비율
+- 책 판매 시, `SettlementRatioService.findCurrentRatio()`로 **현재 비율의 ID를 가져와서** `BOOK_SALE_RECORD.RATIO_ID`에 저장
+- 이후 정산비율이 변경되더라도, 각 판매 기록은 **판매 시점의 비율**을 유지
+- 따라서 `BOOK_SALE_RECORD JOIN SETTLEMENT_RATIO`는 항상 유효 (판매 시점에 이미 RATIO_ID가 존재)
+
+## 이어가기 컨텍스트
+**사용자 마지막 질문**: "BOOK_SALE_RECORD의 RATIO_ID가 SETTLEMENT_RATIO를 참조하는데, SETTLEMENT_RATIO는 정산이 실행될 때 생성되는 테이블 아닌가? 그러면 판매 시점에 JOIN이 안 되는 거 아닌가?"
+→ 위 "SETTLEMENT_RATIO 테이블의 실제 역할" 섹션으로 답변 가능
 
 ### 다음 단계
-1. **Phase B: 고객 QnA 게시판** — 고객 질문 + 관리자 답변 구조 (미착수)
-2. **docs/개발_레퍼런스.md 업데이트** — 신규 시퀀스 매핑 3건 추가 필요
+1. **프론트엔드: 달력 UI 연동** — 기간별 매출/영업이익 조회에 달력 날짜 선택 연동
+2. **docs/개발_레퍼런스.md 업데이트** — 신규 시퀀스 매핑 추가 필요 (BOOK_REQUEST: ISEQ$$_78846, NOTIFICATION: ISEQ$$_78849, QNA: ISEQ$$_78856)
 3. **RoleCheckAspect 확장 검토** — 현재 checkOwnership이 BOOK_OWNER만 지원, CUSTOMER 지원 필요 여부 검토
 
 ## 참조 문서

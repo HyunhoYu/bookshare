@@ -402,3 +402,89 @@ Table FOLLOW {
   언팔로우 시 hard DELETE (이력 불필요).
   '''
 }
+
+// ============================================================
+// BOOK_REQUEST (책 입고 요청)
+// ============================================================
+
+Table BOOK_REQUEST {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78846']
+  CUSTOMER_ID NUMBER [not null, ref: > USERS.ID]
+  ISBN VARCHAR2(13) [not null]
+  BOOK_TITLE VARCHAR2(200) [not null]
+  AUTHOR VARCHAR2(200)
+  PUBLISHER VARCHAR2(200)
+  THUMBNAIL_URL VARCHAR2(500) [note: '책 표지 이미지 URL (ISBN 검색 결과)']
+  STATUS VARCHAR2(20) [not null, default: 'PENDING', note: 'PENDING / APPROVED / REJECTED']
+  ADMIN_COMMENT VARCHAR2(500) [note: '관리자 메모 (승인/거절 사유)']
+  CREATED_AT TIMESTAMP [default: 'SYSTIMESTAMP']
+  PROCESSED_AT TIMESTAMP [note: '관리자 처리 시각']
+
+  indexes {
+    (CUSTOMER_ID) [name: 'IDX_BR_CUSTOMER_ID']
+    (STATUS, CREATED_AT) [name: 'IDX_BR_STATUS']
+  }
+
+  Note: '''
+  고객의 책 입고 요청 테이블.
+  고객이 ISBN 검색 후 입고 요청 생성 → 관리자가 승인/거절 처리.
+  요청 생성 시 모든 ADMIN 사용자에게 NOTIFICATION 자동 발송.
+  상태 변경 시 요청 고객에게 NOTIFICATION 발송.
+  STATUS CHECK: PENDING / APPROVED / REJECTED
+  '''
+}
+
+// ============================================================
+// NOTIFICATION (알림)
+// ============================================================
+
+Table NOTIFICATION {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78849']
+  USER_ID NUMBER [not null, ref: > USERS.ID]
+  TYPE VARCHAR2(50) [not null, note: 'BOOK_REQUEST / BOOK_REQUEST_STATUS_CHANGE 등']
+  MESSAGE VARCHAR2(500) [not null]
+  REFERENCE_ID NUMBER [note: '참조 엔티티 ID (BOOK_REQUEST.ID 등)']
+  IS_READ NUMBER [not null, default: 0, note: '0=미읽음, 1=읽음']
+  CREATED_AT TIMESTAMP [default: 'SYSTIMESTAMP']
+
+  indexes {
+    (USER_ID, CREATED_AT) [name: 'IDX_NOTIF_USER_ID']
+    (USER_ID, IS_READ) [name: 'IDX_NOTIF_USER_UNREAD']
+  }
+
+  Note: '''
+  범용 알림 테이블.
+  모든 도메인에서 재사용 가능한 구조.
+  TYPE으로 알림 종류 구분, REFERENCE_ID로 원본 엔티티 참조.
+  IS_READ CHECK: 0 (미읽음) / 1 (읽음)
+  '''
+}
+
+// ============================================================
+// QNA (고객 QnA 게시판)
+// ============================================================
+
+Table QNA {
+  ID NUMBER [pk, increment, note: 'ISEQ$$_78856']
+  CUSTOMER_ID NUMBER [not null, ref: > USERS.ID]
+  TITLE VARCHAR2(200) [not null]
+  CONTENT VARCHAR2(4000) [not null]
+  ANSWER VARCHAR2(4000) [note: '관리자 답변 (NULL=미답변)']
+  ANSWERED_BY NUMBER [ref: > USERS.ID, note: '답변 작성 관리자 ID']
+  ANSWERED_AT TIMESTAMP [note: '답변 시각']
+  CREATED_AT TIMESTAMP [default: 'SYSTIMESTAMP']
+  UPDATED_AT TIMESTAMP [note: '수정 시각']
+
+  indexes {
+    (CUSTOMER_ID) [name: 'IDX_QNA_CUSTOMER_ID']
+    (CREATED_AT) [name: 'IDX_QNA_CREATED_AT']
+  }
+
+  Note: '''
+  고객 QnA 게시판 테이블.
+  고객이 질문 작성 → 관리자가 답변 등록.
+  질문 생성 시 모든 ADMIN에게 NOTIFICATION(QNA) 발송.
+  답변 등록 시 질문 작성 고객에게 NOTIFICATION(QNA_ANSWER) 발송.
+  한 번 답변된 QnA는 재답변 불가 (QNA_ALREADY_ANSWERED).
+  '''
+}

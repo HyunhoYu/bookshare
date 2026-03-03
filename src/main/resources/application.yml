@@ -36,3 +36,8 @@ toss:
   payments:
     secret-key: ${TOSS_SECRET_KEY}
     base-url: https://api.tosspayments.com/v1
+
+naver:
+  api:
+    client-id: ${NAVER_CLIENT_ID:}
+    client-secret: ${NAVER_CLIENT_SECRET:}

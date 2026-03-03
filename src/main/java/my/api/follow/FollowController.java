@@ -53,4 +53,19 @@ public class FollowController {
         Long customerId = (Long) request.getAttribute("userId");
         return ApiResponse.success(postService.findFeed(customerId));
     }
+
+    @RequireRole(Role.CUSTOMER)
+    @GetMapping("/check/{bookOwnerId}")
+    public ApiResponse<Boolean> isFollowing(
+            HttpServletRequest request,
+            @PathVariable("bookOwnerId") Long bookOwnerId) {
+        Long customerId = (Long) request.getAttribute("userId");
+        return ApiResponse.success(followService.isFollowing(customerId, bookOwnerId));
+    }
+
+    @RequireRole({Role.ADMIN, Role.BOOK_OWNER, Role.CUSTOMER})
+    @GetMapping("/count/{bookOwnerId}")
+    public ApiResponse<Integer> getFollowerCount(@PathVariable("bookOwnerId") Long bookOwnerId) {
+        return ApiResponse.success(followService.getFollowerCount(bookOwnerId));
+    }
 }

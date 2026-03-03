@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.qna.QnaMapper">
+
+    <resultMap id="qnaResultMap" type="my.domain.qna.QnaVO">
+        <id property="id" column="ID"/>
+        <result property="customerId" column="CUSTOMER_ID"/>
+        <result property="title" column="TITLE"/>
+        <result property="content" column="CONTENT"/>
+        <result property="answer" column="ANSWER"/>
+        <result property="answeredBy" column="ANSWERED_BY"/>
+        <result property="answeredAt" column="ANSWERED_AT"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="customerName" column="CUSTOMER_NAME"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="my.domain.qna.QnaVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78856".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO QNA (CUSTOMER_ID, TITLE, CONTENT)
+        VALUES (#{customerId}, #{title}, #{content})
+    </insert>
+
+    <select id="selectById" parameterType="long" resultMap="qnaResultMap">
+        SELECT Q.*, U.NAME AS CUSTOMER_NAME
+        FROM QNA Q
+        JOIN USERS U ON Q.CUSTOMER_ID = U.ID
+        WHERE Q.ID = #{id}
+    </select>
+
+    <select id="selectByCustomerId" parameterType="long" resultMap="qnaResultMap">
+        SELECT Q.*, U.NAME AS CUSTOMER_NAME
+        FROM QNA Q
+        JOIN USERS U ON Q.CUSTOMER_ID = U.ID
+        WHERE Q.CUSTOMER_ID = #{customerId}
+        ORDER BY Q.CREATED_AT DESC
+    </select>
+
+    <select id="selectAll" resultMap="qnaResultMap">
+        SELECT Q.*, U.NAME AS CUSTOMER_NAME
+        FROM QNA Q
+        JOIN USERS U ON Q.CUSTOMER_ID = U.ID
+        ORDER BY Q.CREATED_AT DESC
+    </select>
+
+    <update id="updateAnswer" parameterType="my.domain.qna.QnaVO">
+        UPDATE QNA
+        SET ANSWER = #{answer},
+            ANSWERED_BY = #{answeredBy,jdbcType=NUMERIC},
+            ANSWERED_AT = SYSTIMESTAMP
+        WHERE ID = #{id}
+    </update>
+
+    <select id="selectRecent" parameterType="int" resultMap="qnaResultMap">
+        SELECT Q.*, U.NAME AS CUSTOMER_NAME
+        FROM QNA Q
+        JOIN USERS U ON Q.CUSTOMER_ID = U.ID
+        ORDER BY Q.CREATED_AT DESC
+        FETCH FIRST #{limit} ROWS ONLY
+    </select>
+
+</mapper>

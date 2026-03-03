@@ -2,6 +2,7 @@ package my.api.auth;
 
 import lombok.RequiredArgsConstructor;
 import my.common.response.ApiResponse;
+import my.domain.bookcase.BookCaseVO;
 import my.domain.bookowner.dto.request.BookOwnerJoinRequestDto;
 import my.domain.bookowner.service.auth.BookOwnerAuthService;
 import my.domain.bookowner.vo.BookOwnerVO;
@@ -14,6 +15,7 @@ import my.jwt.JwtProvider;
 import my.jwt.JwtTokenResponseDto;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.JstlUtils;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -32,6 +34,7 @@ public class AuthApiController {
         String token = jwtProvider.createToken(user);
         return ApiResponse.success(new JwtTokenResponseDto(token));
     }
+
 
     @PostMapping("/book-owner")
     public ApiResponse<JwtTokenResponseDto> registerBookOwner(@RequestBody @Valid BookOwnerJoinRequestDto dto) {

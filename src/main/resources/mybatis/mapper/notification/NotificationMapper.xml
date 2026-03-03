@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.notification.NotificationMapper">
+
+    <resultMap id="notificationResultMap" type="my.domain.notification.NotificationVO">
+        <id property="id" column="ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="type" column="TYPE"/>
+        <result property="message" column="MESSAGE"/>
+        <result property="referenceId" column="REFERENCE_ID"/>
+        <result property="isRead" column="IS_READ"/>
+        <result property="createdAt" column="CREATED_AT"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="my.domain.notification.NotificationVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_78849".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO NOTIFICATION (USER_ID, TYPE, MESSAGE, REFERENCE_ID)
+        VALUES (#{userId}, #{type}, #{message}, #{referenceId,jdbcType=NUMERIC})
+    </insert>
+
+    <select id="selectByUserId" parameterType="long" resultMap="notificationResultMap">
+        SELECT * FROM NOTIFICATION
+        WHERE USER_ID = #{userId}
+        ORDER BY CREATED_AT DESC
+    </select>
+
+    <select id="selectById" parameterType="long" resultMap="notificationResultMap">
+        SELECT * FROM NOTIFICATION WHERE ID = #{id}
+    </select>
+
+    <update id="markAsRead" parameterType="long">
+        UPDATE NOTIFICATION SET IS_READ = 1 WHERE ID = #{id}
+    </update>
+
+    <select id="countUnreadByUserId" parameterType="long" resultType="int">
+        SELECT COUNT(*) FROM NOTIFICATION WHERE USER_ID = #{userId} AND IS_READ = 0
+    </select>
+
+</mapper>
