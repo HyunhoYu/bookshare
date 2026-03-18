@@ -16,6 +16,7 @@
         <result property="bookOwnerName" column="BOOK_OWNER_NAME"/>
         <result property="bookOwnerNickname" column="BOOK_OWNER_NICKNAME"/>
         <result property="bookName" column="BOOK_NAME"/>
+        <result property="likeCount" column="LIKE_COUNT"/>
     </resultMap>
 
     <sql id="postDetailSelect">
@@ -23,7 +24,8 @@
                P.CREATED_AT, P.UPDATED_AT,
                U.NAME AS BOOK_OWNER_NAME,
                BOP.NICKNAME AS BOOK_OWNER_NICKNAME,
-               B.BOOK_NAME AS BOOK_NAME
+               B.BOOK_NAME AS BOOK_NAME,
+               (SELECT COUNT(*) FROM POST_LIKE PL WHERE PL.POST_ID = P.ID) AS LIKE_COUNT
         FROM BOOK_OWNER_POST P
         JOIN USERS U ON P.BOOK_OWNER_ID = U.ID
         LEFT JOIN BOOK_OWNER_PROFILE BOP ON P.BOOK_OWNER_ID = BOP.BOOK_OWNER_ID

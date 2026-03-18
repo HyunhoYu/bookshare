@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.wishlist.WishlistMapper">
+
+    <insert id="insert">
+        INSERT INTO WISHLIST (CUSTOMER_ID, BOOK_ID) VALUES (#{customerId}, #{bookId})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM WISHLIST WHERE CUSTOMER_ID = #{customerId} AND BOOK_ID = #{bookId}
+    </delete>
+
+    <select id="selectByCustomerId" parameterType="long" resultType="my.domain.wishlist.WishlistVO">
+        SELECT W.ID, W.CUSTOMER_ID, W.BOOK_ID, W.CREATED_AT,
+               B.BOOK_NAME, B.PUBLISHER_HOUSE, B.PRICE,
+               B.BOOK_OWNER_ID,
+               U.NAME AS BOOK_OWNER_NAME,
+               BOP.NICKNAME AS BOOK_OWNER_NICKNAME,
+               CC_GENRE.CODE_NAME AS GENRE_NAME,
+               CC_LOC.CODE_NAME AS LOCATION_NAME
+        FROM WISHLIST W
+        JOIN BOOK B ON W.BOOK_ID = B.ID
+        JOIN USERS U ON B.BOOK_OWNER_ID = U.ID
+        JOIN BOOK_CASE BC ON B.BOOK_CASE_ID = BC.ID
+        LEFT JOIN BOOK_OWNER_PROFILE BOP ON B.BOOK_OWNER_ID = BOP.BOOK_OWNER_ID
+        LEFT JOIN COMMON_CODE CC_GENRE ON CC_GENRE.GROUP_CODE = 'BOOK_TYPE' AND CC_GENRE.CODE = B.COMMON_CODE_ID
+        LEFT JOIN COMMON_CODE CC_LOC ON CC_LOC.GROUP_CODE = 'LOCATION' AND CC_LOC.CODE = BC.COMMON_CODE_ID
+        WHERE W.CUSTOMER_ID = #{customerId}
+          AND B.DELETED_AT IS NULL
+          AND U.DELETED_AT IS NULL
+        ORDER BY W.CREATED_AT DESC
+    </select>
+
+    <select id="checkExists" resultType="int">
+        SELECT COUNT(*) FROM WISHLIST WHERE CUSTOMER_ID = #{customerId} AND BOOK_ID = #{bookId}
+    </select>
+
+</mapper>

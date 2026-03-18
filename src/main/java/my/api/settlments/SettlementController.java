@@ -30,7 +30,7 @@ public class SettlementController {
     @RequireRole(Role.ADMIN)
     @GetMapping("/completed")
     public ApiResponse<List<SettlementVO>> findAllCompleted() {
-        List<SettlementVO> settlements = settlementService.findAll();
+        List<SettlementVO> settlements = settlementService.findAllCompleted();
         return ApiResponse.success(settlements);
     }
 

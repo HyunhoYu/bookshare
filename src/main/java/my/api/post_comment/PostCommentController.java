@@ -58,4 +58,13 @@ public class PostCommentController {
         commentService.delete(commentId, userId);
         return ApiResponse.success(null);
     }
+
+    @RequireRole(Role.ADMIN)
+    @DeleteMapping("/admin/{commentId}")
+    public ApiResponse<Void> adminDelete(
+            @PathVariable("postId") Long postId,
+            @PathVariable("commentId") Long commentId) {
+        commentService.adminDelete(commentId);
+        return ApiResponse.success(null);
+    }
 }

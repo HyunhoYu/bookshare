@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.announcement.AnnouncementMapper">
+
+    <resultMap id="announcementResultMap" type="my.domain.announcement.AnnouncementVO">
+        <id property="id" column="ID"/>
+        <result property="adminId" column="ADMIN_ID"/>
+        <result property="title" column="TITLE"/>
+        <result property="content" column="CONTENT"/>
+        <result property="targetRole" column="TARGET_ROLE"/>
+        <result property="isPinned" column="IS_PINNED"/>
+        <result property="viewCount" column="VIEW_COUNT"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="deletedAt" column="DELETED_AT"/>
+        <result property="adminName" column="ADMIN_NAME"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="my.domain.announcement.AnnouncementVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT ANNOUNCEMENT_SEQ.CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO ANNOUNCEMENT (ADMIN_ID, TITLE, CONTENT, TARGET_ROLE, IS_PINNED)
+        VALUES (#{adminId}, #{title}, #{content}, #{targetRole}, #{isPinned})
+    </insert>
+
+    <select id="selectById" parameterType="long" resultMap="announcementResultMap">
+        SELECT A.*, U.NAME AS ADMIN_NAME
+        FROM ANNOUNCEMENT A
+        JOIN USERS U ON A.ADMIN_ID = U.ID
+        WHERE A.ID = #{id} AND A.DELETED_AT IS NULL
+    </select>
+
+    <select id="selectAll" resultMap="announcementResultMap">
+        SELECT A.*, U.NAME AS ADMIN_NAME
+        FROM ANNOUNCEMENT A
+        JOIN USERS U ON A.ADMIN_ID = U.ID
+        WHERE A.DELETED_AT IS NULL
+        ORDER BY A.IS_PINNED DESC, A.CREATED_AT DESC
+    </select>
+
+    <select id="selectByTargetRole" resultMap="announcementResultMap">
+        SELECT A.*, U.NAME AS ADMIN_NAME
+        FROM ANNOUNCEMENT A
+        JOIN USERS U ON A.ADMIN_ID = U.ID
+        WHERE A.DELETED_AT IS NULL
+          AND (A.TARGET_ROLE = 'ALL' OR A.TARGET_ROLE = #{targetRole})
+        ORDER BY A.IS_PINNED DESC, A.CREATED_AT DESC
+    </select>
+
+    <update id="update" parameterType="my.domain.announcement.AnnouncementVO">
+        UPDATE ANNOUNCEMENT
+        SET TITLE = #{title},
+            CONTENT = #{content},
+            TARGET_ROLE = #{targetRole},
+            IS_PINNED = #{isPinned},
+            UPDATED_AT = CURRENT_TIMESTAMP
+        WHERE ID = #{id} AND DELETED_AT IS NULL
+    </update>
+
+    <update id="softDelete" parameterType="long">
+        UPDATE ANNOUNCEMENT SET DELETED_AT = CURRENT_TIMESTAMP WHERE ID = #{id} AND DELETED_AT IS NULL
+    </update>
+
+    <update id="incrementViewCount" parameterType="long">
+        UPDATE ANNOUNCEMENT SET VIEW_COUNT = VIEW_COUNT + 1 WHERE ID = #{id} AND DELETED_AT IS NULL
+    </update>
+
+</mapper>

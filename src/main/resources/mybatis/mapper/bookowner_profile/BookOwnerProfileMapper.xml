@@ -13,6 +13,8 @@
         <result property="createdAt" column="CREATED_AT"/>
         <result property="updatedAt" column="UPDATED_AT"/>
         <result property="bookOwnerName" column="BOOK_OWNER_NAME"/>
+        <result property="bookCount" column="BOOK_COUNT"/>
+        <result property="followerCount" column="FOLLOWER_COUNT"/>
     </resultMap>
 
     <insert id="insert" parameterType="my.domain.bookowner_profile.BookOwnerProfileVO">
@@ -44,6 +46,19 @@
         JOIN USERS U ON P.BOOK_OWNER_ID = U.ID
         WHERE P.NICKNAME = #{nickname}
           AND U.DELETED_AT IS NULL
+    </select>
+
+    <select id="selectAll" resultMap="profileResultMap">
+        SELECT P.*, U.NAME AS BOOK_OWNER_NAME,
+               (SELECT COUNT(*) FROM BOOK B
+                WHERE B.BOOK_OWNER_ID = P.BOOK_OWNER_ID
+                  AND B.DELETED_AT IS NULL AND B.STATE = 'NORMAL') AS BOOK_COUNT,
+               (SELECT COUNT(*) FROM FOLLOW F
+                WHERE F.BOOK_OWNER_ID = P.BOOK_OWNER_ID) AS FOLLOWER_COUNT
+        FROM BOOK_OWNER_PROFILE P
+        JOIN USERS U ON P.BOOK_OWNER_ID = U.ID
+        WHERE U.DELETED_AT IS NULL
+        ORDER BY FOLLOWER_COUNT DESC
     </select>
 
 </mapper>

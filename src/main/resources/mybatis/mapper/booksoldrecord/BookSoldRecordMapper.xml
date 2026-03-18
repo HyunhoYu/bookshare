@@ -47,6 +47,12 @@
         JOIN SETTLEMENT_RATIO SR ON BSR.RATIO_ID = SR.ID
     </sql>
 
+    <select id="selectDetailByCustomerId" parameterType="long" resultType="my.domain.booksoldrecord.vo.BookSoldRecordVO">
+        <include refid="unsettledDetailSelect"/>
+        WHERE BSR.CUSTOMER_ID = #{customerId}
+        ORDER BY BSR.SOLD_AT DESC
+    </select>
+
     <select id="selectUnsettled" resultType="my.domain.booksoldrecord.vo.BookSoldRecordVO">
         <include refid="unsettledDetailSelect"/>
         WHERE BSR.BOOK_OWNER_SETTLEMENT_ID IS NULL

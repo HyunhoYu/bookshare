@@ -57,6 +57,7 @@ public enum ErrorCode {
     RENTAL_SETTLEMENT_ALREADY_PAID("이미 납부된 임대료입니다", 409),
     UNSETTLED_SALE_RECORD_EXISTS("미정산 판매기록이 존재하여 임대 종료할 수 없습니다", 400),
     DEPOSIT_INSERT_FAIL("보증금 저장 실패", 500),
+    SETTLEMENT_RATIO_NOT_FOUND("정산비율이 설정되지 않았습니다. 먼저 정산비율을 설정해주세요", 400),
 
     // Profile
     PROFILE_ALREADY_EXISTS("이미 프로필이 존재합니다", 409),
@@ -92,6 +93,29 @@ public enum ErrorCode {
     QNA_NOT_FOUND("존재하지 않는 QnA입니다", 404),
     QNA_INSERT_FAIL("QnA 저장 실패", 500),
     QNA_ALREADY_ANSWERED("이미 답변된 QnA입니다", 409),
+
+    // PostLike
+    ALREADY_LIKED("이미 좋아요한 게시글입니다", 409),
+    NOT_LIKED("좋아요하지 않은 게시글입니다", 400),
+    LIKE_INSERT_FAIL("좋아요 저장 실패", 500),
+
+    // Review
+    REVIEW_NOT_FOUND("존재하지 않는 리뷰입니다", 404),
+    REVIEW_ALREADY_EXISTS("이미 리뷰를 작성한 구매 건입니다", 409),
+    REVIEW_INSERT_FAIL("리뷰 저장 실패", 500),
+
+    // Account
+    PASSWORD_MISMATCH("현재 비밀번호가 일치하지 않습니다", 400),
+    ACCOUNT_UPDATE_FAIL("계정 정보 수정 실패", 500),
+
+    // Wishlist
+    WISHLIST_ALREADY_EXISTS("이미 관심 등록된 도서입니다", 409),
+    WISHLIST_NOT_FOUND("관심 등록되지 않은 도서입니다", 404),
+    WISHLIST_INSERT_FAIL("관심 도서 등록 실패", 500),
+
+    // Announcement
+    ANNOUNCEMENT_NOT_FOUND("존재하지 않는 공지사항입니다", 404),
+    ANNOUNCEMENT_INSERT_FAIL("공지사항 저장 실패", 500),
     ;
 
     private final String message;

@@ -16,8 +16,8 @@
         <selectKey keyProperty="id" resultType="long" order="AFTER">
             SELECT "ISEQ$$_78799".CURRVAL FROM DUAL
         </selectKey>
-        INSERT INTO DEPOSIT (BOOK_OWNER_ID, AMOUNT, REMAINING_AMOUNT)
-        VALUES (#{bookOwnerId}, #{amount}, #{amount})
+        INSERT INTO DEPOSIT (BOOK_OWNER_ID, AMOUNT, REMAINING_AMOUNT, STATUS)
+        VALUES (#{bookOwnerId}, #{amount}, #{amount}, #{status})
     </insert>
 
     <update id="update" parameterType="my.domain.deposit.DepositVO">

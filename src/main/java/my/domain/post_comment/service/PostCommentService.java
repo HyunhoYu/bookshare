@@ -11,4 +11,5 @@ public interface PostCommentService {
     PostCommentVO update(Long commentId, Long userId, PostCommentUpdateDto dto);
     void delete(Long commentId, Long userId);
     List<PostCommentVO> findByPostId(Long postId);
+    void adminDelete(Long commentId);
 }

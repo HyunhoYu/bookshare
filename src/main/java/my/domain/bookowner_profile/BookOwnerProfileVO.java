@@ -18,4 +18,6 @@ public class BookOwnerProfileVO {
 
     // JOIN fields
     private String bookOwnerName;
+    private Integer bookCount;
+    private Integer followerCount;
 }

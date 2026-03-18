@@ -13,5 +13,6 @@ public interface FollowMapper {
     FollowVO selectByCustomerIdAndBookOwnerId(@Param("customerId") Long customerId,
                                                @Param("bookOwnerId") Long bookOwnerId);
     List<FollowVO> selectByCustomerId(Long customerId);
+    List<FollowVO> selectFollowersByBookOwnerId(Long bookOwnerId);
     int countByBookOwnerId(Long bookOwnerId);
 }

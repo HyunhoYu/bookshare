@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import my.common.exception.ApplicationException;
 import my.common.exception.ErrorCode;
 import my.domain.bookowner_post.BookOwnerPostMapper;
+import my.domain.bookowner_post.BookOwnerPostVO;
+import my.domain.notification.service.NotificationService;
 import my.domain.post_comment.PostCommentMapper;
 import my.domain.post_comment.PostCommentVO;
 import my.domain.post_comment.dto.PostCommentCreateDto;
@@ -21,11 +23,12 @@ public class PostCommentServiceImpl implements PostCommentService {
 
     private final PostCommentMapper commentMapper;
     private final BookOwnerPostMapper postMapper;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
     public PostCommentVO create(Long postId, Long userId, PostCommentCreateDto dto) {
-        requireNonNull(postMapper.selectById(postId), ErrorCode.POST_NOT_FOUND);
+        BookOwnerPostVO post = requireNonNull(postMapper.selectById(postId), ErrorCode.POST_NOT_FOUND);
 
         if (dto.getParentId() != null) {
             PostCommentVO parent = requireNonNull(
@@ -44,6 +47,19 @@ public class PostCommentServiceImpl implements PostCommentService {
         int result = commentMapper.insert(vo);
         if (result != 1) {
             throw new ApplicationException(ErrorCode.COMMENT_INSERT_FAIL);
+        }
+
+        // 본인 게시글에 본인이 댓글 단 경우 알림 제외
+        if (!post.getBookOwnerId().equals(userId)) {
+            String preview = dto.getContent().length() > 30
+                    ? dto.getContent().substring(0, 30) + "..."
+                    : dto.getContent();
+            notificationService.create(
+                    post.getBookOwnerId(),
+                    "NEW_COMMENT",
+                    "게시글 \"" + post.getTitle() + "\"에 새 댓글: " + preview,
+                    postId
+            );
         }
 
         return commentMapper.selectById(vo.getId());
@@ -73,6 +89,13 @@ public class PostCommentServiceImpl implements PostCommentService {
             throw new ApplicationException(ErrorCode.FORBIDDEN);
         }
 
+        commentMapper.softDelete(commentId);
+    }
+
+    @Override
+    @Transactional
+    public void adminDelete(Long commentId) {
+        requireNonNull(commentMapper.selectById(commentId), ErrorCode.COMMENT_NOT_FOUND);
         commentMapper.softDelete(commentId);
     }
 

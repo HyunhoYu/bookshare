@@ -9,6 +9,9 @@ import my.domain.bookowner.BookOwnerMapper;
 import my.domain.customer.CustomerMapper;
 import my.domain.follow.FollowMapper;
 import my.domain.follow.FollowVO;
+import my.domain.notification.service.NotificationService;
+import my.domain.user.UserMapper;
+import my.domain.user.UserVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,8 @@ public class FollowServiceImpl implements FollowService {
     private final FollowMapper followMapper;
     private final CustomerMapper customerMapper;
     private final BookOwnerMapper bookOwnerMapper;
+    private final NotificationService notificationService;
+    private final UserMapper userMapper;
 
     @Override
     @Transactional
@@ -40,6 +45,16 @@ public class FollowServiceImpl implements FollowService {
         if (result != 1) {
             throw new ApplicationException(ErrorCode.FOLLOW_INSERT_FAIL);
         }
+
+        // BookOwner에게 새 팔로워 알림
+        UserVO customer = userMapper.selectById(customerId);
+        String customerName = customer != null ? customer.getName() : "고객";
+        notificationService.create(
+                bookOwnerId,
+                "NEW_FOLLOWER",
+                customerName + "님이 팔로우했습니다.",
+                customerId
+        );
 
         return vo;
     }
@@ -67,5 +82,10 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public int getFollowerCount(Long bookOwnerId) {
         return followMapper.countByBookOwnerId(bookOwnerId);
+    }
+
+    @Override
+    public List<FollowVO> getFollowers(Long bookOwnerId) {
+        return followMapper.selectFollowersByBookOwnerId(bookOwnerId);
     }
 }

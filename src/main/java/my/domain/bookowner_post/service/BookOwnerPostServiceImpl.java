@@ -106,4 +106,11 @@ public class BookOwnerPostServiceImpl implements BookOwnerPostService {
     public List<BookOwnerPostVO> findFeed(Long customerId) {
         return postMapper.selectFeedByCustomerId(customerId);
     }
+
+    @Override
+    @Transactional
+    public void adminDelete(Long postId) {
+        requireNonNull(postMapper.selectById(postId), ErrorCode.POST_NOT_FOUND);
+        postMapper.softDelete(postId);
+    }
 }

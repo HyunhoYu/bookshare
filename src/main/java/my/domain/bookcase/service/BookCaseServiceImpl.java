@@ -132,7 +132,7 @@ public class BookCaseServiceImpl implements BookCaseService {
     @Transactional
     public List<BookVO> registerBooks(Long bookCaseId, List<BookRegisterDto> bookRegisterDtos) {
         validateBookCaseExists(bookCaseId);
-        UserVO bookOwner = findBookOwnerByNameAndPhone(bookRegisterDtos);
+        UserVO bookOwner = requireNonNull(findBookOwnerByNameAndPhone(bookRegisterDtos), ErrorCode.BOOK_OWNER_NOT_FOUND);
         validateOwnerOccupiesBookCase(bookCaseId, bookOwner.getId());
 
         return bookRegisterDtos.stream()
@@ -162,6 +162,9 @@ public class BookCaseServiceImpl implements BookCaseService {
         bookVO.setPrice(dto.getPrice());
         bookVO.setGroupCodeId("BOOK_TYPE");
         bookVO.setCommonCodeId(dto.getBookTypeCode());
+        bookVO.setIsbn(dto.getIsbn());
+        bookVO.setAuthor(dto.getAuthor());
+        bookVO.setThumbnailUrl(dto.getThumbnailUrl());
 
         int result = bookMapper.insert(bookVO);
         if (result != 1) {

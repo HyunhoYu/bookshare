@@ -47,4 +47,14 @@
         SELECT COUNT(*) FROM FOLLOW WHERE BOOK_OWNER_ID = #{bookOwnerId}
     </select>
 
+    <select id="selectFollowersByBookOwnerId" parameterType="long" resultType="my.domain.follow.FollowVO">
+        SELECT F.ID, F.CUSTOMER_ID, F.BOOK_OWNER_ID, F.CREATED_AT,
+               U.NAME AS CUSTOMER_NAME
+        FROM FOLLOW F
+        JOIN USERS U ON F.CUSTOMER_ID = U.ID
+        WHERE F.BOOK_OWNER_ID = #{bookOwnerId}
+          AND U.DELETED_AT IS NULL
+        ORDER BY F.CREATED_AT DESC
+    </select>
+
 </mapper>

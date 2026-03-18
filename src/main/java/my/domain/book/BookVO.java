@@ -20,6 +20,9 @@ public class BookVO {
     private String commonCodeId;
     private String state;
     private Date deletedAt;
+    private String isbn;
+    private String author;
+    private String thumbnailUrl;
 
     public BookVO() {
         setState(BookState.NORMAL.name());

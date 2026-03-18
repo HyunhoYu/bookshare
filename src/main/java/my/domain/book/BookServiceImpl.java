@@ -61,4 +61,14 @@ public class BookServiceImpl implements BookService {
         return bookMapper.selectByBookCaseId(bookCaseId);
     }
 
+    @Override
+    public List<CustomerBookDetailVO> findForCustomerBrowse(String search, String genreCode, String locationCode, Long bookOwnerId) {
+        return bookMapper.selectForCustomerBrowse(search, genreCode, locationCode, bookOwnerId);
+    }
+
+    @Override
+    public CustomerBookDetailVO findCustomerBookDetail(Long id) {
+        return bookMapper.selectCustomerBookDetail(id);
+    }
+
 }

@@ -13,6 +13,7 @@ import my.domain.bookowner.BookOwnerMapper;
 import my.domain.bookowner.vo.BookOwnerVO;
 import my.domain.booksoldrecord.BookSoldRecordMapper;
 import my.domain.booksoldrecord.vo.BookSoldRecordVO;
+import my.domain.notification.service.NotificationService;
 import my.domain.payment.TossPaymentService;
 import my.domain.payment.dto.TossTransferResponseDto;
 import my.domain.settlement.SettlementMapper;
@@ -36,10 +37,16 @@ public class SettlementServiceImpl implements SettlementService{
     private final BookOwnerMapper bookOwnerMapper;
     private final BankAccountMapper bankAccountMapper;
     private final TossPaymentService tossPaymentService;
+    private final NotificationService notificationService;
 
     @Override
     public List<SettlementVO> findAll() {
         return settlementMapper.selectAll();
+    }
+
+    @Override
+    public List<SettlementVO> findAllCompleted() {
+        return settlementMapper.selectAllCompleted();
     }
 
     @Override
@@ -112,6 +119,15 @@ public class SettlementServiceImpl implements SettlementService{
 
         // 판매기록 UPDATE
         bookSoldRecordMapper.updateSettlementId(settlementVO.getId(), saleRecordIds);
+
+        // BookOwner에게 정산 완료 알림
+        String formattedAmount = String.format("%,d", ownerAmount);
+        notificationService.create(
+                bookOwnerId,
+                "SETTLEMENT_COMPLETE",
+                "정산이 완료되었습니다. 정산 금액: " + formattedAmount + "원",
+                settlementVO.getId()
+        );
 
         return settlementVO;
     }

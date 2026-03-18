@@ -21,5 +21,7 @@ public interface BookMapper {
     int countByIdsAndState(@Param("bookIds") List<Long> bookIds, @Param("state") String state);
     List<BookWithBookCaseVO> selectAllWithBookCase(@Param("state") String state);
     List<BookVO> selectByBookCaseId(Long bookCaseId);
+    List<CustomerBookDetailVO> selectForCustomerBrowse(@Param("search") String search, @Param("genreCode") String genreCode, @Param("locationCode") String locationCode, @Param("bookOwnerId") Long bookOwnerId);
+    CustomerBookDetailVO selectCustomerBookDetail(Long id);
 
 }

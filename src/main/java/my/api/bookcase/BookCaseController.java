@@ -80,7 +80,7 @@ public class BookCaseController {
 
 
     @RequireRole(value = {Role.ADMIN, Role.BOOK_OWNER}, checkOwnership = true)
-    @GetMapping("/{bookowner-id}")
+    @GetMapping("/by-owner/{bookowner-id}")
     public ApiResponse<List<Long>> findByBookOwnerId(@PathVariable("bookowner-id") Long bookOwnerId) {
         List<Long> ids = bookCaseService.findOccupyingBookCaseIds(bookOwnerId);
         return ApiResponse.success(ids);

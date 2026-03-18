@@ -19,4 +19,12 @@
         SELECT * FROM ADDRESS WHERE ID = #{userId}
     </select>
 
+    <update id="update" parameterType="my.domain.address.vo.AddressVO">
+        UPDATE ADDRESS
+        SET CITY = #{city, jdbcType=VARCHAR},
+            LOAD_ADDR = #{loadAddr, jdbcType=VARCHAR},
+            SPECIFIC_ADDR = #{specificAddr, jdbcType=VARCHAR}
+        WHERE ID = #{userId}
+    </update>
+
 </mapper>

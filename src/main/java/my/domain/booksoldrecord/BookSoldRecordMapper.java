@@ -14,6 +14,7 @@ public interface BookSoldRecordMapper {
     List<BookSoldRecordVO> selectAll();
     BookSoldRecordVO selectById(Long id);
     List<BookSoldRecordVO> selectByCustomerId(Long customerId);
+    List<BookSoldRecordVO> selectDetailByCustomerId(Long customerId);
     List<BookSoldRecordVO> selectBySettlementId(Long settlementId);
     int insert(BookSoldRecordVO bookSoldRecordVO);
     List<BookSoldRecordVO> selectUnsettled();

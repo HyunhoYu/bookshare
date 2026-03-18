@@ -10,4 +10,5 @@ public interface FollowService {
     List<FollowVO> getFollowList(Long customerId);
     boolean isFollowing(Long customerId, Long bookOwnerId);
     int getFollowerCount(Long bookOwnerId);
+    List<FollowVO> getFollowers(Long bookOwnerId);
 }

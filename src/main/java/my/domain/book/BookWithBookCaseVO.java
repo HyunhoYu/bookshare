@@ -20,6 +20,11 @@ public class BookWithBookCaseVO {
     private String bookCommonCodeId;
     private String state;
 
+    // ISBN/Author/Cover
+    private String isbn;
+    private String author;
+    private String thumbnailUrl;
+
     // BookCase 필드
     private String bookCaseGroupCodeId;
     private String bookCaseCommonCodeId;

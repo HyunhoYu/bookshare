@@ -24,15 +24,18 @@ public class DashboardController {
     @RequireRole(Role.ADMIN)
     @GetMapping("/bookcase-sales")
     public ApiResponse<SalesSummaryDto> getSalesSummary(
-            @RequestParam(value = "month", required = false) String targetMonth) {
-        return ApiResponse.success(dashboardService.getSalesSummary(targetMonth));
+            @RequestParam(value = "startMonth", required = false) String startMonth,
+            @RequestParam(value = "endMonth", required = false) String endMonth) {
+        return ApiResponse.success(dashboardService.getSalesSummary(startMonth, endMonth));
     }
 
     @RequireRole(Role.ADMIN)
     @GetMapping("/book-owner-ranking")
     public ApiResponse<List<BookOwnerRankingDto>> getBookOwnerRanking(
-            @RequestParam(value = "sort", defaultValue = "popularity") String sort) {
-        return ApiResponse.success(dashboardService.getBookOwnerRanking(sort));
+            @RequestParam(value = "sort", defaultValue = "popularity") String sort,
+            @RequestParam(value = "startMonth", required = false) String startMonth,
+            @RequestParam(value = "endMonth", required = false) String endMonth) {
+        return ApiResponse.success(dashboardService.getBookOwnerRanking(sort, startMonth, endMonth));
     }
 
     @RequireRole(Role.ADMIN)

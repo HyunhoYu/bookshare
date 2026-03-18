@@ -37,6 +37,12 @@
         WHERE S.BOOK_OWNER_ID = #{id}
     </select>
 
+    <select id="selectAllCompleted" resultType="my.domain.settlement.vo.SettlementVO">
+        <include refid="settlementDetailSelect"/>
+        WHERE S.SETTLED_AT IS NOT NULL
+        ORDER BY S.SETTLED_AT DESC
+    </select>
+
     <select id="selectSettledByBookOwnerId" parameterType="long" resultType="my.domain.settlement.vo.SettlementVO">
         <include refid="settlementDetailSelect"/>
         WHERE S.BOOK_OWNER_ID = #{id} AND S.SETTLED_AT IS NOT NULL

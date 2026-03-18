@@ -86,10 +86,14 @@
     <!-- 책소유주 id로 현재 점유중인 책장 리스트 조회    -->
 
     <select id="selectBookCasesByOwnerId" parameterType="long" resultType="my.domain.bookcase.BookCaseVO">
-        SELECT BC.*
+        SELECT BC.ID, BC.GROUP_CODE_ID, BC.COMMON_CODE_ID, BC.BOOK_CASE_TYPE_ID,
+               CC.CODE_NAME AS LOCATION_NAME,
+               BCT.CODE AS BOOK_CASE_TYPE_CODE,
+               BCT.MONTHLY_PRICE
         FROM BOOK_CASE BC
-        JOIN BOOK_CASE_OCCUPIED_RECORD BCOR
-        ON BC.ID = BCOR.BOOK_CASE_ID
+        JOIN BOOK_CASE_OCCUPIED_RECORD BCOR ON BC.ID = BCOR.BOOK_CASE_ID
+        LEFT JOIN COMMON_CODE CC ON CC.GROUP_CODE = 'LOCATION' AND CC.CODE = BC.COMMON_CODE_ID
+        LEFT JOIN BOOK_CASE_TYPE BCT ON BCT.ID = BC.BOOK_CASE_TYPE_ID
         WHERE BCOR.UN_OCCUPIED_AT IS NULL AND BCOR.BOOK_OWNER_ID = #{id}
     </select>
 

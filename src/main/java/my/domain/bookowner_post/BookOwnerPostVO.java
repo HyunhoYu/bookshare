@@ -21,4 +21,5 @@ public class BookOwnerPostVO extends MyApplicationVO {
     private String bookOwnerName;
     private String bookOwnerNickname;
     private String bookName;
+    private int likeCount;
 }

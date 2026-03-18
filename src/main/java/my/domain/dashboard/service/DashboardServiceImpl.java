@@ -25,12 +25,17 @@ public class DashboardServiceImpl implements DashboardService {
     private final QnaMapper qnaMapper;
 
     @Override
-    public SalesSummaryDto getSalesSummary(String targetMonth) {
-        if (targetMonth == null || targetMonth.isEmpty()) {
-            targetMonth = LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"));
+    public SalesSummaryDto getSalesSummary(String startMonth, String endMonth) {
+        if (startMonth == null || startMonth.isEmpty()) {
+            String lastMonth = LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            startMonth = lastMonth;
+            endMonth = lastMonth;
+        }
+        if (endMonth == null || endMonth.isEmpty()) {
+            endMonth = startMonth;
         }
 
-        List<BookCaseSalesDto> bookCaseSales = dashboardMapper.selectBookCaseSalesByMonth(targetMonth);
+        List<BookCaseSalesDto> bookCaseSales = dashboardMapper.selectBookCaseSales(startMonth, endMonth);
 
         long totalSalesAmount = bookCaseSales.stream()
                 .mapToLong(BookCaseSalesDto::getTotalSalesAmount)
@@ -44,7 +49,7 @@ public class DashboardServiceImpl implements DashboardService {
         long averageSalesPerBookCase = bookCaseCount > 0 ? totalSalesAmount / bookCaseCount : 0;
 
         SalesSummaryDto summary = new SalesSummaryDto();
-        summary.setTargetMonth(targetMonth);
+        summary.setTargetMonth(startMonth.equals(endMonth) ? startMonth : startMonth + " ~ " + endMonth);
         summary.setTotalSalesAmount(totalSalesAmount);
         summary.setTotalSoldCount(totalSoldCount);
         summary.setBookCaseCount(bookCaseCount);
@@ -55,11 +60,11 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public List<BookOwnerRankingDto> getBookOwnerRanking(String sort) {
+    public List<BookOwnerRankingDto> getBookOwnerRanking(String sort, String startMonth, String endMonth) {
         if ("sales".equals(sort)) {
-            return dashboardMapper.selectBookOwnerRankingBySales();
+            return dashboardMapper.selectBookOwnerRankingBySales(startMonth, endMonth);
         }
-        return dashboardMapper.selectBookOwnerRankingByFollowers();
+        return dashboardMapper.selectBookOwnerRankingByFollowers(startMonth, endMonth);
     }
 
     @Override

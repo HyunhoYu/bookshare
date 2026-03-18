@@ -69,13 +69,13 @@ public class DepositServiceImpl implements DepositService {
         }
 
         if (overdueList.isEmpty()) return;
-
         // 3. 보증금 조회
         DepositVO deposit = depositMapper.selectByBookOwnerId(bookOwnerId);
         if (deposit == null) {
             log.warn("BookOwner {} 보증금 없음", bookOwnerId);
             return;
         }
+
 
         // 4. FIFO 공제
         for (RentalSettlementVO rental : overdueList) {

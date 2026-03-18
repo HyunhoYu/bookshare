@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.post_like.PostLikeMapper">
+
+    <resultMap id="postLikeResultMap" type="my.domain.post_like.PostLikeVO">
+        <id property="id" column="ID"/>
+        <result property="postId" column="POST_ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="createdAt" column="CREATED_AT"/>
+    </resultMap>
+
+    <!-- NOTE: Replace ISEQ$$_XXXXX with actual sequence after table creation -->
+    <!-- Find it: SELECT SEQUENCE_NAME FROM ALL_TAB_IDENTITY_COLS WHERE TABLE_NAME = 'POST_LIKE'; -->
+    <insert id="insert" parameterType="my.domain.post_like.PostLikeVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_79395".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO POST_LIKE (POST_ID, USER_ID)
+        VALUES (#{postId}, #{userId})
+    </insert>
+
+    <delete id="deleteByPostIdAndUserId">
+        DELETE FROM POST_LIKE
+        WHERE POST_ID = #{postId} AND USER_ID = #{userId}
+    </delete>
+
+    <select id="selectByPostIdAndUserId" resultMap="postLikeResultMap">
+        SELECT * FROM POST_LIKE
+        WHERE POST_ID = #{postId} AND USER_ID = #{userId}
+    </select>
+
+    <select id="countByPostId" parameterType="long" resultType="int">
+        SELECT COUNT(*) FROM POST_LIKE WHERE POST_ID = #{postId}
+    </select>
+
+</mapper>

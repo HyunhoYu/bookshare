@@ -9,6 +9,7 @@ import java.util.List;
 public interface SettlementMapper {
 
     List<SettlementVO> selectAll();
+    List<SettlementVO> selectAllCompleted();
     List<SettlementVO> selectAllByBookOwnerId(Long bookOwnerId);
     List<SettlementVO> selectSettledByBookOwnerId(Long bookOwnerId);
     SettlementVO selectById(Long id);

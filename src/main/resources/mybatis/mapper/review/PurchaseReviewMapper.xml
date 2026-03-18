@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my.domain.review.PurchaseReviewMapper">
+
+    <resultMap id="reviewResultMap" type="my.domain.review.PurchaseReviewVO">
+        <id property="id" column="ID"/>
+        <result property="bookSaleRecordId" column="BOOK_SALE_RECORD_ID"/>
+        <result property="customerId" column="CUSTOMER_ID"/>
+        <result property="bookOwnerId" column="BOOK_OWNER_ID"/>
+        <result property="rating" column="RATING"/>
+        <result property="content" column="CONTENT"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="customerName" column="CUSTOMER_NAME"/>
+        <result property="bookName" column="BOOK_NAME"/>
+        <result property="bookOwnerName" column="BOOK_OWNER_NAME"/>
+    </resultMap>
+
+    <sql id="reviewDetailSelect">
+        SELECT PR.ID, PR.BOOK_SALE_RECORD_ID, PR.CUSTOMER_ID, PR.BOOK_OWNER_ID,
+               PR.RATING, PR.CONTENT, PR.CREATED_AT, PR.UPDATED_AT,
+               CU.NAME AS CUSTOMER_NAME,
+               B.BOOK_NAME AS BOOK_NAME,
+               OU.NAME AS BOOK_OWNER_NAME
+        FROM PURCHASE_REVIEW PR
+        JOIN USERS CU ON PR.CUSTOMER_ID = CU.ID
+        JOIN BOOK_SALE_RECORD BSR ON PR.BOOK_SALE_RECORD_ID = BSR.ID
+        JOIN BOOK B ON BSR.ID = B.ID
+        JOIN USERS OU ON PR.BOOK_OWNER_ID = OU.ID
+    </sql>
+
+    <insert id="insert" parameterType="my.domain.review.PurchaseReviewVO">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            SELECT "ISEQ$$_79421".CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO PURCHASE_REVIEW (BOOK_SALE_RECORD_ID, CUSTOMER_ID, BOOK_OWNER_ID, RATING, CONTENT)
+        VALUES (#{bookSaleRecordId}, #{customerId}, #{bookOwnerId}, #{rating}, #{content,jdbcType=VARCHAR})
+    </insert>
+
+    <update id="update" parameterType="my.domain.review.PurchaseReviewVO">
+        UPDATE PURCHASE_REVIEW
+        SET RATING = #{rating}, CONTENT = #{content,jdbcType=VARCHAR}, UPDATED_AT = SYSTIMESTAMP
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="delete" parameterType="long">
+        DELETE FROM PURCHASE_REVIEW WHERE ID = #{id}
+    </delete>
+
+    <select id="selectById" parameterType="long" resultMap="reviewResultMap">
+        <include refid="reviewDetailSelect"/>
+        WHERE PR.ID = #{id}
+    </select>
+
+    <select id="selectByBookSaleRecordId" parameterType="long" resultMap="reviewResultMap">
+        <include refid="reviewDetailSelect"/>
+        WHERE PR.BOOK_SALE_RECORD_ID = #{bookSaleRecordId}
+    </select>
+
+    <select id="selectByCustomerId" parameterType="long" resultMap="reviewResultMap">
+        <include refid="reviewDetailSelect"/>
+        WHERE PR.CUSTOMER_ID = #{customerId}
+        ORDER BY PR.CREATED_AT DESC
+    </select>
+
+    <select id="selectByBookOwnerId" parameterType="long" resultMap="reviewResultMap">
+        <include refid="reviewDetailSelect"/>
+        WHERE PR.BOOK_OWNER_ID = #{bookOwnerId}
+        ORDER BY PR.CREATED_AT DESC
+    </select>
+
+    <select id="selectSummaryByBookOwnerId" parameterType="long" resultType="my.domain.review.dto.ReviewSummaryDto">
+        SELECT NVL(ROUND(AVG(RATING), 1), 0) AS AVERAGE_RATING,
+               COUNT(*) AS REVIEW_COUNT
+        FROM PURCHASE_REVIEW
+        WHERE BOOK_OWNER_ID = #{bookOwnerId}
+    </select>
+
+</mapper>

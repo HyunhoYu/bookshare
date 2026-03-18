@@ -37,6 +37,11 @@ public class JwtFilter implements Filter {
         );
 
         if (whiteList.stream().anyMatch(path::startsWith)) {
+            // 화이트리스트: 토큰 없어도 통과, 있으면 파싱해서 세팅
+            if (token != null && jwtProvider.validateToken(token)) {
+                httpServletRequest.setAttribute("userId", jwtProvider.getUserId(token));
+                httpServletRequest.setAttribute("userRole", jwtProvider.getRole(token));
+            }
             chain.doFilter(request, response);
             return;
         }

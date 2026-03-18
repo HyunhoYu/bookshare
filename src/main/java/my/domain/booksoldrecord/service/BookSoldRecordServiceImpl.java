@@ -12,6 +12,7 @@ import my.domain.booksoldrecord.dto.BuyBookRequestDto;
 import my.domain.booksoldrecord.vo.BookSoldRecordVO;
 import my.domain.code.CommonCodeMapper;
 import my.domain.settlement_ratio.service.SettlementRatioService;
+import my.domain.settlement_ratio.vo.SettlementRatioVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +54,11 @@ public class BookSoldRecordServiceImpl implements BookSoldRecordService {
 
     }
 
+    @Override
+    public List<BookSoldRecordVO> findByCustomerId(Long customerId) {
+        return bookSoldRecordMapper.selectDetailByCustomerId(customerId);
+    }
+
     private BookSoldRecordVO createSoldRecord(BookVO bookVO, BuyBookRequestDto dto) {
         requireNonNull(
                 commonCodeMapper.selectByGroupCodeAndCode("BUY_TYPE", dto.getBuyTypeCommonCode()),
@@ -65,7 +71,8 @@ public class BookSoldRecordServiceImpl implements BookSoldRecordService {
         bookSoldRecordVO.setGroupCodeId("BUY_TYPE");
         bookSoldRecordVO.setCommonCodeId(dto.getBuyTypeCommonCode());
         bookSoldRecordVO.setBookOwnerSettlementId(null);
-        bookSoldRecordVO.setRatioId(settlementRatioService.findCurrentRatio().getId());
+        SettlementRatioVO currentRatio = requireNonNull(settlementRatioService.findCurrentRatio(), ErrorCode.SETTLEMENT_RATIO_NOT_FOUND);
+        bookSoldRecordVO.setRatioId(currentRatio.getId());
 
         int result = bookMapper.updateStateSold(bookVO.getId());
 

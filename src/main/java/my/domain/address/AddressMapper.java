@@ -7,4 +7,5 @@ import org.apache.ibatis.annotations.Mapper;
 public interface AddressMapper {
     int insert(AddressVO addressVO);
     AddressVO selectByUserId(Long userId);
+    int update(AddressVO addressVO);
 }

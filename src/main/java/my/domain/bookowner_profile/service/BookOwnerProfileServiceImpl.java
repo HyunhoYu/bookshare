@@ -2,6 +2,8 @@ package my.domain.bookowner_profile.service;
 
 import static my.common.util.EntityUtil.requireNonNull;
 
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import my.common.exception.ApplicationException;
 import my.common.exception.ErrorCode;
@@ -75,5 +77,10 @@ public class BookOwnerProfileServiceImpl implements BookOwnerProfileService {
     @Override
     public BookOwnerProfileVO findByBookOwnerId(Long bookOwnerId) {
         return profileMapper.selectByBookOwnerId(bookOwnerId);
+    }
+
+    @Override
+    public List<BookOwnerProfileVO> findAllProfiles() {
+        return profileMapper.selectAll();
     }
 }

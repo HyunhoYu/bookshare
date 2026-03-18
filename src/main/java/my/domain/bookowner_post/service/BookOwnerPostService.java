@@ -14,4 +14,5 @@ public interface BookOwnerPostService {
     List<BookOwnerPostVO> findByBookOwnerId(Long bookOwnerId);
     List<BookOwnerPostVO> findAll();
     List<BookOwnerPostVO> findFeed(Long customerId);
+    void adminDelete(Long postId);
 }

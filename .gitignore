@@ -6,7 +6,8 @@ target/
 *체크리스트*.md
 *명세서*.html
 erd.pdf
-pom.xml
+presentation.html
+*.postman_collection.json
 
 # IDE - IntelliJ
 .idea/
@@ -21,6 +22,9 @@ pom.xml
 
 # IDE - VS Code
 .vscode/
+
+# Claude Code
+.claude/
 
 # Environment & Secrets
 .env

@@ -9,8 +9,8 @@ import my.domain.qna.QnaVO;
 import java.util.List;
 
 public interface DashboardService {
-    SalesSummaryDto getSalesSummary(String targetMonth);
-    List<BookOwnerRankingDto> getBookOwnerRanking(String sort);
+    SalesSummaryDto getSalesSummary(String startMonth, String endMonth);
+    List<BookOwnerRankingDto> getBookOwnerRanking(String sort, String startMonth, String endMonth);
     List<BookRequestVO> getRecentBookRequests(int limit);
     List<QnaVO> getRecentQna(int limit);
     PeriodProfitDto getPeriodProfit(String startDate, String endDate);

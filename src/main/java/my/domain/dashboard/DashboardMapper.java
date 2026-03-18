@@ -11,11 +11,11 @@ import java.util.List;
 @Mapper
 public interface DashboardMapper {
 
-    List<BookCaseSalesDto> selectBookCaseSalesByMonth(@Param("targetMonth") String targetMonth);
+    List<BookCaseSalesDto> selectBookCaseSales(@Param("startMonth") String startMonth, @Param("endMonth") String endMonth);
 
-    List<BookOwnerRankingDto> selectBookOwnerRankingByFollowers();
+    List<BookOwnerRankingDto> selectBookOwnerRankingByFollowers(@Param("startMonth") String startMonth, @Param("endMonth") String endMonth);
 
-    List<BookOwnerRankingDto> selectBookOwnerRankingBySales();
+    List<BookOwnerRankingDto> selectBookOwnerRankingBySales(@Param("startMonth") String startMonth, @Param("endMonth") String endMonth);
 
     PeriodProfitDto selectPeriodProfit(@Param("startDate") String startDate, @Param("endDate") String endDate);
 }

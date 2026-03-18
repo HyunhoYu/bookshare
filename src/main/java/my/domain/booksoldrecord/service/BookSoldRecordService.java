@@ -8,4 +8,5 @@ import java.util.List;
 public interface BookSoldRecordService {
 
     List<BookSoldRecordVO> sellBooks(List<BuyBookRequestDto> buyBookRequestDtos);
+    List<BookSoldRecordVO> findByCustomerId(Long customerId);
 }

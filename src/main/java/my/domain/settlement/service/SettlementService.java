@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface SettlementService {
     List<SettlementVO> findAll();
+    List<SettlementVO> findAllCompleted();
     List<SettlementVO> findAll(Long BookOwnerId);
     List<SettlementVO> findSettled(Long BookOwnerId);
     List<BookSoldRecordVO> findUnSettled(Long BookOwnerId);

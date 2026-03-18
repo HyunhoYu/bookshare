@@ -16,4 +16,5 @@ public class FollowVO extends MyApplicationVO {
     // JOIN fields
     private String bookOwnerName;
     private String bookOwnerNickname;
+    private String customerName;
 }

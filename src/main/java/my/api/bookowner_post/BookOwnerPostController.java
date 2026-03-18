@@ -71,4 +71,11 @@ public class BookOwnerPostController {
         postService.delete(id, bookOwnerId);
         return ApiResponse.success(null);
     }
+
+    @RequireRole(Role.ADMIN)
+    @DeleteMapping("/admin/{id}")
+    public ApiResponse<Void> adminDelete(@PathVariable("id") Long id) {
+        postService.adminDelete(id);
+        return ApiResponse.success(null);
+    }
 }

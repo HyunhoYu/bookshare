@@ -23,8 +23,8 @@
         <result property="soldCount" column="SOLD_COUNT"/>
     </resultMap>
 
-    <!-- Last month book case sales: join BOOK_SALE_RECORD -> BOOK -> BOOK_CASE -> COMMON_CODE + BOOK_CASE_TYPE -->
-    <select id="selectBookCaseSalesByMonth" parameterType="string" resultMap="bookCaseSalesResultMap">
+    <!-- Book case sales by month range -->
+    <select id="selectBookCaseSales" resultMap="bookCaseSalesResultMap">
         SELECT
             BC.ID AS BOOK_CASE_ID,
             CC.CODE_NAME AS LOCATION_NAME,
@@ -40,12 +40,13 @@
         LEFT JOIN USERS U ON U.ID = BCOR.BOOK_OWNER_ID
         LEFT JOIN BOOK B ON B.BOOK_CASE_ID = BC.ID AND B.DELETED_AT IS NULL
         LEFT JOIN BOOK_SALE_RECORD BSR ON BSR.ID = B.ID
-            AND TO_CHAR(BSR.SOLD_AT, 'YYYY-MM') = #{targetMonth}
+            AND TO_CHAR(BSR.SOLD_AT, 'YYYY-MM') &gt;= #{startMonth}
+            AND TO_CHAR(BSR.SOLD_AT, 'YYYY-MM') &lt;= #{endMonth}
         GROUP BY BC.ID, CC.CODE_NAME, BCT.CODE, BCOR.BOOK_OWNER_ID, U.NAME
         ORDER BY TOTAL_SALES_AMOUNT DESC
     </select>
 
-    <!-- BookOwner ranking by follower count -->
+    <!-- BookOwner ranking by follower count (optional month range filter on sales) -->
     <select id="selectBookOwnerRankingByFollowers" resultMap="bookOwnerRankingResultMap">
         SELECT
             U.ID AS BOOK_OWNER_ID,
@@ -68,13 +69,19 @@
                    COUNT(BSR.ID) AS SOLD_COUNT
             FROM BOOK B
             JOIN BOOK_SALE_RECORD BSR ON BSR.ID = B.ID
+            <where>
+                <if test="startMonth != null and endMonth != null">
+                    TO_CHAR(BSR.SOLD_AT, 'YYYY-MM') &gt;= #{startMonth}
+                    AND TO_CHAR(BSR.SOLD_AT, 'YYYY-MM') &lt;= #{endMonth}
+                </if>
+            </where>
             GROUP BY B.BOOK_OWNER_ID
         ) SC ON BO.ID = SC.BOOK_OWNER_ID
         WHERE U.DELETED_AT IS NULL
         ORDER BY FOLLOWER_COUNT DESC, TOTAL_SALES_AMOUNT DESC
     </select>
 
-    <!-- BookOwner ranking by total sales amount -->
+    <!-- BookOwner ranking by total sales amount (optional month range filter) -->
     <select id="selectBookOwnerRankingBySales" resultMap="bookOwnerRankingResultMap">
         SELECT
             U.ID AS BOOK_OWNER_ID,
@@ -97,6 +104,12 @@
                    COUNT(BSR.ID) AS SOLD_COUNT
             FROM BOOK B
             JOIN BOOK_SALE_RECORD BSR ON BSR.ID = B.ID
+            <where>
+                <if test="startMonth != null and endMonth != null">
+                    TO_CHAR(BSR.SOLD_AT, 'YYYY-MM') &gt;= #{startMonth}
+                    AND TO_CHAR(BSR.SOLD_AT, 'YYYY-MM') &lt;= #{endMonth}
+                </if>
+            </where>
             GROUP BY B.BOOK_OWNER_ID
         ) SC ON BO.ID = SC.BOOK_OWNER_ID
         WHERE U.DELETED_AT IS NULL

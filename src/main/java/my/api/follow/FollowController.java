@@ -68,4 +68,11 @@ public class FollowController {
     public ApiResponse<Integer> getFollowerCount(@PathVariable("bookOwnerId") Long bookOwnerId) {
         return ApiResponse.success(followService.getFollowerCount(bookOwnerId));
     }
+
+    @RequireRole(Role.BOOK_OWNER)
+    @GetMapping("/my-followers")
+    public ApiResponse<List<FollowVO>> getMyFollowers(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return ApiResponse.success(followService.getFollowers(userId));
+    }
 }
